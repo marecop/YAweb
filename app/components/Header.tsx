@@ -95,7 +95,7 @@ export default function Header() {
   const userAvatar = user?.firstName ? `${user.firstName.charAt(0)}${user.lastName?.charAt(0) || ''}` : '遊';
   const userName = user ? `${user.firstName || ''} ${user.lastName || ''}` : '遊客';
   const userRole = user?.role === 'admin' ? '管理員' : '';
-  const memberLevel = user?.memberLevel ? getMemberLevelName(user.memberLevel) : '';
+  const memberLevel = user?.memberLevel ? getMemberLevelName(String(user.memberLevel)) : '';
 
   return (
     <header className={`fixed top-0 left-0 right-0 z-50 bg-white transition-shadow duration-300 ${scrolled ? 'shadow-md' : ''}`}>
@@ -155,8 +155,8 @@ export default function Header() {
                   </div>
                   <span className="ml-1 text-sm hidden sm:inline-block">{getUserDisplayName()}</span>
                   {user?.memberLevel && (
-                    <span className={`ml-2 px-2 py-0.5 rounded-full text-xs ${getMemberLevelColorClass(user.memberLevel)}`}>
-                      {getMemberLevelName(user.memberLevel)}
+                    <span className={`ml-2 px-2 py-0.5 rounded-full text-xs ${getMemberLevelColorClass(String(user.memberLevel))}`}>
+                      {getMemberLevelName(String(user.memberLevel))}
                     </span>
                   )}
                 </button>
@@ -175,8 +175,8 @@ export default function Header() {
                       已登入為<br />
                         <span className="font-medium text-gray-900">{user?.email}</span>
                         {user?.isMember && user?.memberLevel && (
-                          <div className={`mt-1 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${getMemberLevelColorClass(user.memberLevel)}`}>
-                            {getMemberLevelName(user.memberLevel)}
+                          <div className={`mt-1 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${getMemberLevelColorClass(String(user.memberLevel))}`}>
+                            {getMemberLevelName(String(user.memberLevel))}
                           </div>
                         )}
                     </div>
