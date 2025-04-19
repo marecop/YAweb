@@ -2,7 +2,7 @@ services:
   - type: web
     name: yellow-airlines
     env: node
-    buildCommand: npm ci && npm run build
+    buildCommand: npm ci && npm run fix-directory && npm run build
     startCommand: npm start
     envVars:
       - key: NODE_ENV
