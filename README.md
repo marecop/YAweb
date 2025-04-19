@@ -10,6 +10,31 @@
 - 模擬航班數據生成
 - 響應式設計適配各種設備
 
+## 部署到Render
+
+此專案可以輕鬆部署到Render平台：
+
+1. 在Render上註冊賬戶並創建一個新的Web Service
+2. 連接您的GitHub倉庫
+3. 使用以下設置：
+   - 環境: `Node`
+   - 構建命令: `npm install && npm run build`
+   - 啟動命令: `npm start`
+   - 計劃類型: 免費（Free）或按需求選擇其他計劃
+
+### 環境變數
+
+請在Render的環境變數設置中添加以下變數：
+
+```
+NODE_ENV=production
+NEXT_PUBLIC_APP_URL=https://your-app-name.onrender.com
+NEXT_PUBLIC_API_URL=https://your-app-name.onrender.com/api
+JWT_SECRET=your_jwt_secret_key_here
+```
+
+更多詳情請參考專案根目錄下的`.env.example`文件。
+
 ## 技術棧
 
 - **前端框架**: Next.js 14
