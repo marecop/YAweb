@@ -69,7 +69,15 @@ const filesToFix = [
         to: "from '../../contexts/CurrencyContext'"
       },
       {
+        from: /from\s+['"]@\/app\/utils\/memberUtils['"]/g,
+        to: "from '../../utils/memberUtils'"
+      },
+      {
         from: /from\s+['"]@\/utils\/memberUtils['"]/g,
+        to: "from '../../utils/memberUtils'"
+      },
+      {
+        from: /from\s+['"]..\/..\/utils\/memberUtils['"]/g,
         to: "from '../../utils/memberUtils'"
       }
     ]
@@ -82,7 +90,15 @@ const filesToFix = [
         to: "from '../../contexts/AuthContext'"
       },
       {
+        from: /from\s+['"]@\/app\/utils\/memberUtils['"]/g,
+        to: "from '../../utils/memberUtils'"
+      },
+      {
         from: /from\s+['"]@\/utils\/memberUtils['"]/g,
+        to: "from '../../utils/memberUtils'"
+      },
+      {
+        from: /from\s+['"]..\/..\/utils\/memberUtils['"]/g,
         to: "from '../../utils/memberUtils'"
       }
     ]
@@ -104,7 +120,15 @@ const filesToFix = [
         to: "from '../../contexts/AuthContext'"
       },
       {
+        from: /from\s+['"]@\/app\/utils\/memberUtils['"]/g,
+        to: "from '../../utils/memberUtils'"
+      },
+      {
         from: /from\s+['"]@\/utils\/memberUtils['"]/g,
+        to: "from '../../utils/memberUtils'"
+      },
+      {
+        from: /from\s+['"]..\/..\/utils\/memberUtils['"]/g,
         to: "from '../../utils/memberUtils'"
       }
     ]
@@ -147,11 +171,16 @@ if (!fs.existsSync(utilsDir)) {
   console.log(`   創建目錄: utils`);
 }
 
+// 確保app/utils目錄存在
+const appUtilsDir = path.join(__dirname, '../app/utils');
+if (!fs.existsSync(appUtilsDir)) {
+  fs.mkdirSync(appUtilsDir, { recursive: true });
+  console.log(`   創建目錄: app/utils`);
+}
+
 // 創建必要的memberUtils.ts文件
 const memberUtilsPath = path.join(utilsDir, 'memberUtils.ts');
-if (!fs.existsSync(memberUtilsPath)) {
-  console.log(`   創建文件: utils/memberUtils.ts`);
-  fs.writeFileSync(memberUtilsPath, `
+const memberUtilsContent = `
 export const getMemberLevelName = (level: number): string => {
   switch (level) {
     case 1:
@@ -181,7 +210,19 @@ export const getMemberLevelColorClass = (level: number): string => {
       return 'text-gray-500';
   }
 };
-`);
+`;
+
+// 在根目錄下的 utils 中創建文件
+if (!fs.existsSync(memberUtilsPath)) {
+  console.log(`   創建文件: utils/memberUtils.ts`);
+  fs.writeFileSync(memberUtilsPath, memberUtilsContent);
+}
+
+// 在 app/utils 中創建文件
+const appMemberUtilsPath = path.join(appUtilsDir, 'memberUtils.ts');
+if (!fs.existsSync(appMemberUtilsPath)) {
+  console.log(`   創建文件: app/utils/memberUtils.ts`);
+  fs.writeFileSync(appMemberUtilsPath, memberUtilsContent);
 }
 
 // 創建必要的AuthContext文件
@@ -320,6 +361,46 @@ export const CurrencyProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 `);
+}
+
+// 修正 app/components/Header.tsx
+const headerFilePath = path.join(__dirname, '../app/components/Header.tsx');
+if (fs.existsSync(headerFilePath)) {
+  console.log(`   直接修復: app/components/Header.tsx`);
+  
+  let headerContent = fs.readFileSync(headerFilePath, 'utf8');
+  
+  // 替換導入語句
+  const importPattern = /import\s+{\s*getMemberLevelName\s*,\s*getMemberLevelColorClass\s*}\s+from\s+(['"]).*?(['"])/g;
+  const newImport = "import { getMemberLevelName, getMemberLevelColorClass } from '../../utils/memberUtils'";
+  
+  if (importPattern.test(headerContent)) {
+    headerContent = headerContent.replace(importPattern, newImport);
+    fs.writeFileSync(headerFilePath, headerContent, 'utf8');
+    console.log(`   ✅ 已修復 Header.tsx 的導入語句`);
+  } else {
+    console.log(`   ⚠️ 未找到相關導入語句`);
+  }
+}
+
+// 修正 app/member/page.tsx
+const memberPagePath = path.join(__dirname, '../app/member/page.tsx');
+if (fs.existsSync(memberPagePath)) {
+  console.log(`   直接修復: app/member/page.tsx`);
+  
+  let memberPageContent = fs.readFileSync(memberPagePath, 'utf8');
+  
+  // 替換導入語句
+  const importPattern = /import\s+{\s*getMemberLevelName\s*,\s*getMemberLevelColorClass\s*}\s+from\s+(['"]).*?(['"])/g;
+  const newImport = "import { getMemberLevelName, getMemberLevelColorClass } from '../../utils/memberUtils'";
+  
+  if (importPattern.test(memberPageContent)) {
+    memberPageContent = memberPageContent.replace(importPattern, newImport);
+    fs.writeFileSync(memberPagePath, memberPageContent, 'utf8');
+    console.log(`   ✅ 已修復 member/page.tsx 的導入語句`);
+  } else {
+    console.log(`   ⚠️ 未找到相關導入語句`);
+  }
 }
 
 // 修復文件
