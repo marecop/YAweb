@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/app/contexts/AuthContext';
-import AdminSidebar from '@/app/components/AdminSidebar';
+import { useAuth } from '../contexts/AuthContext';
+import AdminSidebar from '../components/AdminSidebar';
 import Link from 'next/link';
 import { MdMenu, MdClose } from 'react-icons/md';
 
