@@ -179,7 +179,7 @@ export default function MemberPage() {
               <p className="text-ya-yellow-50 mb-3">{user?.email}</p>
               <div className="flex items-center justify-center md:justify-start space-x-3">
                 <span className={`px-3 py-1 rounded-full text-sm font-medium ${getLevelColor()}`}>
-                  {getMemberLevelName(user?.memberLevel || 'standard')}
+                  {getMemberLevelName(String(user?.memberLevel || 'standard'))}
                 </span>
                 <span className="text-white">
                   會員ID: YA{user?.id?.substring(5, 12) || ''}
