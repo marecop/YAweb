@@ -1,0 +1,44 @@
+[
+  {
+    "id": "1",
+    "email": "test@example.com",
+    "password": "password123",
+    "firstName": "測試",
+    "lastName": "用戶"
+  },
+  {
+    "id": "11933570-bafb-4de8-808e-9f157471cf3d",
+    "email": "chejiang2825@ulinkcollege.com",
+    "password": "12345678",
+    "firstName": "宸宇",
+    "lastName": "江"
+  },
+  {
+    "id": "0b5b6a53-1484-4929-ba3d-bd01735c9dff",
+    "email": "1@1.com",
+    "password": "123456",
+    "firstName": "X",
+    "lastName": "YT",
+    "memberLevel": "standard"
+  },
+  {
+    "id": "admin1",
+    "email": "yellowairadmin@flaps1f.com",
+    "password": "admin123",
+    "firstName": "系統",
+    "lastName": "管理員",
+    "role": "admin",
+    "createdAt": "2023-11-20T00:00:00.000Z",
+    "memberLevel": "standard"
+  },
+  {
+    "id": "d1046707-cf80-4bf4-ac46-c64f32892b27",
+    "email": "f@f.com",
+    "firstName": "Zhangjun",
+    "lastName": "Huang",
+    "role": "user",
+    "password": "123456",
+    "createdAt": "2025-04-15T11:59:58.666Z",
+    "memberLevel": "diamond"
+  }
+]
