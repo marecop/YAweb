@@ -370,16 +370,17 @@ if (fs.existsSync(headerFilePath)) {
   
   let headerContent = fs.readFileSync(headerFilePath, 'utf8');
   
-  // 替換導入語句
-  const importPattern = /import\s+{\s*getMemberLevelName\s*,\s*getMemberLevelColorClass\s*}\s+from\s+(['"]).*?(['"])/g;
-  const newImport = "import { getMemberLevelName, getMemberLevelColorClass } from '../../utils/memberUtils'";
+  // 修改 Header.tsx 的導入語句
+  const updatedHeaderContent = headerContent.replace(
+    /import\s+{\s*getMemberLevelName\s*,\s*getMemberLevelColorClass\s*}\s+from\s+(['"]).*?(['"])/g,
+    "import { getMemberLevelName, getMemberLevelColorClass } from '../utils/memberUtils'"
+  );
   
-  if (importPattern.test(headerContent)) {
-    headerContent = headerContent.replace(importPattern, newImport);
-    fs.writeFileSync(headerFilePath, headerContent, 'utf8');
-    console.log(`   ✅ 已修復 Header.tsx 的導入語句`);
+  if (updatedHeaderContent !== headerContent) {
+    fs.writeFileSync(headerFilePath, updatedHeaderContent, 'utf8');
+    console.log(`   ✅ 已修復: app/components/Header.tsx 的導入語句`);
   } else {
-    console.log(`   ⚠️ 未找到相關導入語句`);
+    console.log(`   ⚠️ 沒有找到需要修復的導入語句: app/components/Header.tsx`);
   }
 }
 
@@ -390,16 +391,17 @@ if (fs.existsSync(memberPagePath)) {
   
   let memberPageContent = fs.readFileSync(memberPagePath, 'utf8');
   
-  // 替換導入語句
-  const importPattern = /import\s+{\s*getMemberLevelName\s*,\s*getMemberLevelColorClass\s*}\s+from\s+(['"]).*?(['"])/g;
-  const newImport = "import { getMemberLevelName, getMemberLevelColorClass } from '../../utils/memberUtils'";
+  // 修改 member/page.tsx 的導入語句
+  const updatedMemberPageContent = memberPageContent.replace(
+    /import\s+{\s*getMemberLevelName\s*,\s*getMemberLevelColorClass\s*}\s+from\s+(['"]).*?(['"])/g,
+    "import { getMemberLevelName, getMemberLevelColorClass } from '../utils/memberUtils'"
+  );
   
-  if (importPattern.test(memberPageContent)) {
-    memberPageContent = memberPageContent.replace(importPattern, newImport);
-    fs.writeFileSync(memberPagePath, memberPageContent, 'utf8');
-    console.log(`   ✅ 已修復 member/page.tsx 的導入語句`);
+  if (updatedMemberPageContent !== memberPageContent) {
+    fs.writeFileSync(memberPagePath, updatedMemberPageContent, 'utf8');
+    console.log(`   ✅ 已修復: app/member/page.tsx 的導入語句`);
   } else {
-    console.log(`   ⚠️ 未找到相關導入語句`);
+    console.log(`   ⚠️ 沒有找到需要修復的導入語句: app/member/page.tsx`);
   }
 }
 
