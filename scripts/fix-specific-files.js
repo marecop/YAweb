@@ -140,6 +140,50 @@ if (!fs.existsSync(contextsDir)) {
   console.log(`   創建目錄: contexts`);
 }
 
+// 確保utils目錄存在
+const utilsDir = path.join(__dirname, '../utils');
+if (!fs.existsSync(utilsDir)) {
+  fs.mkdirSync(utilsDir, { recursive: true });
+  console.log(`   創建目錄: utils`);
+}
+
+// 創建必要的memberUtils.ts文件
+const memberUtilsPath = path.join(utilsDir, 'memberUtils.ts');
+if (!fs.existsSync(memberUtilsPath)) {
+  console.log(`   創建文件: utils/memberUtils.ts`);
+  fs.writeFileSync(memberUtilsPath, `
+export const getMemberLevelName = (level: number): string => {
+  switch (level) {
+    case 1:
+      return '普通會員';
+    case 2:
+      return '銀卡會員';
+    case 3:
+      return '金卡會員';
+    case 4:
+      return '白金會員';
+    default:
+      return '未知會員等級';
+  }
+};
+
+export const getMemberLevelColorClass = (level: number): string => {
+  switch (level) {
+    case 1:
+      return 'text-gray-500';
+    case 2:
+      return 'text-silver-500';
+    case 3:
+      return 'text-gold-500';
+    case 4:
+      return 'text-platinum-500';
+    default:
+      return 'text-gray-500';
+  }
+};
+`);
+}
+
 // 創建必要的AuthContext文件
 const authContextPath = path.join(contextsDir, 'AuthContext.tsx');
 if (!fs.existsSync(authContextPath)) {
