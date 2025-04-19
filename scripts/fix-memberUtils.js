@@ -47,4 +47,24 @@ export function getMemberLevelColorClass(level) {
 fs.writeFileSync(memberUtilsJsPath, memberUtilsJsContent);
 console.log(`   ✅ 創建/更新文件: app/utils/memberUtils.js`);
 
-console.log('🎉 完成！已修復 memberUtils.js 文件。'); 
+// 創建 app/utils/memberUtils.d.ts (TypeScript 定義文件)
+const memberUtilsDtsPath = path.join(appUtilsDir, 'memberUtils.d.ts');
+const memberUtilsDtsContent = `/**
+ * 根據會員等級返回會員等級名稱
+ * @param level 會員等級 (1-4)
+ * @returns 會員等級名稱
+ */
+export function getMemberLevelName(level: number | string): string;
+
+/**
+ * 根據會員等級返回會員等級顏色樣式類名
+ * @param level 會員等級 (1-4)
+ * @returns 顏色樣式類名
+ */
+export function getMemberLevelColorClass(level: number | string): string;
+`;
+
+fs.writeFileSync(memberUtilsDtsPath, memberUtilsDtsContent);
+console.log(`   ✅ 創建/更新文件: app/utils/memberUtils.d.ts`);
+
+console.log('🎉 完成！已修復 memberUtils.js 文件並添加類型定義。'); 
