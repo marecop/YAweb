@@ -5,7 +5,7 @@
   "main": "server.js",
   "scripts": {
     "dev": "next dev",
-    "prebuild": "node scripts/render-build.js && node scripts/fix-directory.js && node scripts/fix-specific-files.js && node scripts/fix-memberUtils.js",
+    "prebuild": "node scripts/render-build.js && node scripts/fix-directory.js && node scripts/fix-specific-files.js && node scripts/fix-memberUtils.js && node scripts/fix-header.js",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
