@@ -1,22 +1,22 @@
 // 用戶介面定義
-export interface User {
+export type User = {
   id: string;
+  firstName?: string;
+  lastName?: string;
   email: string;
+  role: string;
+  memberLevel?: number;
+  isMember?: boolean;
   password: string;
-  firstName: string;
-  lastName: string;
-  role?: 'user' | 'admin';
-  memberLevel?: 'standard' | 'silver' | 'gold' | 'diamond';
   totalMiles?: number;
   createdAt?: string;
-  isMember?: boolean;
   dateOfBirth?: string;
   phone?: string;
   address?: string;
   country?: string;
   city?: string;
   postalCode?: string;
-}
+};
 
 // 登入參數介面
 export interface LoginParams {

@@ -239,6 +239,8 @@ type User = {
   lastName?: string;
   email: string;
   role: string;
+  memberLevel?: number;
+  isMember?: boolean;
 };
 
 type AuthContextType = {
@@ -269,7 +271,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (email: string, password: string) => {
     // 模擬登入
-    setUser({ id: '1', email, firstName: 'User', lastName: 'Name', role: 'user' });
+    setUser({ 
+      id: '1', 
+      email, 
+      firstName: 'User', 
+      lastName: 'Name', 
+      role: 'user',
+      memberLevel: 1,
+      isMember: true
+    });
     return true;
   };
 
