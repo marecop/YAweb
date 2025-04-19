@@ -5,13 +5,14 @@
   "main": "server.js",
   "scripts": {
     "dev": "next dev",
-    "prebuild": "node scripts/render-build.js && node scripts/fix-directory.js",
+    "prebuild": "node scripts/render-build.js && node scripts/fix-directory.js && node scripts/fix-specific-files.js",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "generate-data": "node scripts/build.js",
     "compile": "tsc --project tsconfig.json",
-    "fix-directory": "node scripts/fix-directory.js"
+    "fix-directory": "node scripts/fix-directory.js",
+    "fix-specific-files": "node scripts/fix-specific-files.js"
   },
   "keywords": [
     "airline",
