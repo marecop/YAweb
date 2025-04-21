@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getUserById, getSession } from '@/app/lib/db';
+import connectToDatabase from '@/app/lib/mongodb';
+import UserModel from '@/app/models/User';
+import SessionModel from '@/app/models/Session';
 
 // 獲取預設用戶資料
 function getDefaultUser(userId: string) {
@@ -32,15 +34,18 @@ function getDefaultUser(userId: string) {
 // 檢查用戶身份驗證狀態
 export async function GET(request: NextRequest) {
   try {
-    // 從 cookie 中獲取會話 ID
-    const sessionId = request.cookies.get('sessionId')?.value;
+    // 連接到數據庫
+    await connectToDatabase();
     
-    if (!sessionId) {
+    // 從 cookie 中獲取會話令牌
+    const sessionToken = request.cookies.get('sessionToken')?.value;
+    
+    if (!sessionToken) {
       return NextResponse.json({ authenticated: false });
     }
     
     // 從數據庫獲取會話信息
-    const session = getSession(sessionId);
+    const session = await SessionModel.findByToken(sessionToken);
     
     if (!session) {
       return NextResponse.json({ authenticated: false });
@@ -52,29 +57,23 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ authenticated: false, error: '會話已過期' });
     }
     
-    // 優先檢查是否為預設用戶
-    let user = null;
-    if (session.userId === 'admin1' || session.userId === '1') {
-      user = getDefaultUser(session.userId);
-    } else {
-      // 從數據庫獲取用戶信息
-      user = getUserById(session.userId);
-    }
+    // 從數據庫獲取用戶信息
+    const user = await UserModel.findById(session.userId);
     
     if (!user) {
       return NextResponse.json({ authenticated: false });
     }
     
-    // 移除敏感資訊，確保管理員自動被標記為會員
-    const { password, ...userInfo } = user;
-    const userData = {
-      ...userInfo,
-      isMember: user.role === 'admin' ? true : !!user.isMember
-    };
+    // 移除敏感資訊
+    const userData = user.toObject();
+    const { password, ...userInfoWithoutPassword } = userData;
+    
+    // 確保管理員自動被標記為會員
+    userInfoWithoutPassword.isMember = userInfoWithoutPassword.role === 'admin' ? true : !!userInfoWithoutPassword.isMember;
     
     return NextResponse.json({
       authenticated: true,
-      user: userData
+      user: userInfoWithoutPassword
     });
   } catch (error) {
     console.error('檢查身份驗證失敗:', error);
