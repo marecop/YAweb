@@ -17,17 +17,28 @@ export default function LoginPage() {
     setErrorMessage('');
     clearError();
     
+    console.log('嘗試登入:', email);
+    
     try {
       const success = await login(email, password);
+      console.log('登入結果:', success);
+      
       if (success) {
-        // 登錄成功，導航到會員中心或首頁
-        router.push('/member');
+        // 獲取重定向 URL（如果有）
+        const urlParams = new URLSearchParams(window.location.search);
+        const redirectUrl = urlParams.get('redirect') || '/member';
+        
+        console.log('登入成功，準備重定向到:', redirectUrl);
+        
+        // 使用 window.location 進行硬重定向，確保頁面完全重新加載
+        window.location.href = redirectUrl;
       } else {
-        // 登錄失敗信息已經由 AuthContext 處理
+        console.error('登入失敗');
+        // 登入失敗信息已經由 AuthContext 處理
       }
     } catch (err) {
-      console.error('登錄時發生錯誤:', err);
-      setErrorMessage('登錄時發生錯誤。請稍後再試。');
+      console.error('登入時發生錯誤:', err);
+      setErrorMessage('登入時發生錯誤。請稍後再試。');
     }
   };
 

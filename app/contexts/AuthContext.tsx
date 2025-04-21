@@ -221,9 +221,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setError(null);
     
     try {
-      // 發送登入請求
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
+      console.log('嘗試登入:', email);
+      
+      // 發送登入請求 - 改為使用 PUT 方法，而不是 POST
+      const response = await fetch('/api/auth', {
+        method: 'PUT', // 修改為 PUT 方法，因為 auth/route.ts 使用 PUT 處理登入
         headers: {
           'Content-Type': 'application/json',
         },
@@ -232,10 +234,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
       
       // 解析響應結果
       const data = await response.json();
+      console.log('登入響應:', data);
       
       // 檢查響應狀態
       if (!response.ok) {
-        setError(data.error || '登入失敗，請檢查您的憑證');
+        const errorMsg = data.error || '登入失敗，請檢查您的憑證';
+        console.error('登入失敗:', errorMsg);
+        setError(errorMsg);
+        setLoading(false);
         return false;
       }
       
@@ -254,19 +260,27 @@ export function AuthProvider({ children }: AuthProviderProps) {
         
         // 保存用戶信息到本地存儲
         try {
-          localStorage.setItem('user', JSON.stringify(userData));
-        } catch (storageError) {
-          console.error('無法保存用戶數據到本地存儲:', storageError);
+          localStorage.setItem('yellairlines_user', JSON.stringify(userData));
+        } catch (e) {
+          console.error('無法保存用戶數據到本地存儲:', e);
         }
+        
+        // 更新最後刷新時間
+        setLastRefreshTime(Date.now());
+        
+        setLoading(false);
+        return true;
+      } else {
+        console.error('登入響應中缺少用戶資料');
+        setError('登入響應中缺少用戶資料');
+        setLoading(false);
+        return false;
       }
-      
-      return true;
     } catch (error) {
-      console.error('登入處理錯誤:', error);
+      console.error('登入處理過程中發生錯誤:', error);
       setError('登入過程中發生錯誤，請稍後再試');
-      return false;
-    } finally {
       setLoading(false);
+      return false;
     }
   };
   
