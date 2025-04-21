@@ -1,6 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserById, getSession } from '@/app/lib/db';
 
+// 獲取預設用戶資料
+function getDefaultUser(userId: string) {
+  if (userId === 'admin1') {
+    return {
+      id: 'admin1',
+      email: 'admin@yellairlines.com',
+      password: 'admin123',
+      firstName: '系統',
+      lastName: '管理員',
+      role: 'admin',
+      isMember: true,
+      createdAt: new Date().toISOString()
+    };
+  } else if (userId === '1') {
+    return {
+      id: '1',
+      email: 'test@example.com',
+      password: 'password123',
+      firstName: '測試',
+      lastName: '用戶',
+      role: 'user',
+      isMember: true,
+      createdAt: new Date().toISOString()
+    };
+  }
+  return null;
+}
+
 // 檢查用戶身份驗證狀態
 export async function GET(request: NextRequest) {
   try {
@@ -24,8 +52,14 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ authenticated: false, error: '會話已過期' });
     }
     
-    // 獲取用戶信息
-    const user = getUserById(session.userId);
+    // 優先檢查是否為預設用戶
+    let user = null;
+    if (session.userId === 'admin1' || session.userId === '1') {
+      user = getDefaultUser(session.userId);
+    } else {
+      // 從數據庫獲取用戶信息
+      user = getUserById(session.userId);
+    }
     
     if (!user) {
       return NextResponse.json({ authenticated: false });

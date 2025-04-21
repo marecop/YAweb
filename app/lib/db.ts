@@ -90,6 +90,7 @@ export function getUsers(): User[] {
           firstName: '測試',
           lastName: '用戶',
           role: 'user',
+          isMember: true,
           createdAt: new Date().toISOString()
         },
         {
@@ -99,6 +100,7 @@ export function getUsers(): User[] {
           firstName: '系統',
           lastName: '管理員',
           role: 'admin',
+          isMember: true,
           createdAt: new Date().toISOString()
         }
       ];
@@ -110,7 +112,29 @@ export function getUsers(): User[] {
     return JSON.parse(data);
   } catch (error) {
     console.error('讀取用戶數據失敗:', error);
-    return [];
+    // 即使讀取失敗也返回預設使用者，確保始終可用的帳戶
+    return [
+      {
+        id: '1',
+        email: 'test@example.com',
+        password: 'password123',
+        firstName: '測試',
+        lastName: '用戶',
+        role: 'user',
+        isMember: true,
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: 'admin1',
+        email: 'admin@yellairlines.com',
+        password: 'admin123',
+        firstName: '系統',
+        lastName: '管理員',
+        role: 'admin',
+        isMember: true,
+        createdAt: new Date().toISOString()
+      }
+    ];
   }
 }
 
@@ -616,4 +640,104 @@ export function getMemberLevelName(level: string): string {
     default:
       return '普通會員';
   }
+}
+
+// 模擬用戶數據庫
+let users = [
+  {
+    id: '1',
+    email: 'admin@example.com',
+    password: 'admin123',
+    firstName: 'Admin',
+    lastName: 'User',
+    role: 'admin',
+    memberLevel: 3,
+    isMember: true
+  },
+  {
+    id: '2',
+    email: 'user@example.com',
+    password: 'user123',
+    firstName: 'Normal',
+    lastName: 'User',
+    role: 'user',
+    memberLevel: 1,
+    isMember: true
+  }
+];
+
+// 模擬會話存儲
+const sessions: Record<string, { userId: string, expiresAt: string }> = {};
+
+// 生成隨機字符串作為會話ID
+function generateSessionId(length: number = 32): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let result = '';
+  for (let i = 0; i < length; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+}
+
+// 創建新用戶
+export function createUser(userData: {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+}) {
+  // 檢查電子郵件是否已存在
+  if (getUserByEmail(userData.email)) {
+    return null;
+  }
+
+  // 創建新用戶
+  const newUser = {
+    id: `${users.length + 1}`,
+    ...userData,
+    role: 'user',
+    memberLevel: 1,
+    isMember: true
+  };
+
+  users.push(newUser);
+  return newUser;
+}
+
+// 創建會話
+export function createSession(userId: string, expiresAt: string): string {
+  const sessionId = generateSessionId();
+  sessions[sessionId] = { userId, expiresAt };
+  return sessionId;
+}
+
+// 獲取會話
+export function getSession(sessionId: string) {
+  return sessions[sessionId];
+}
+
+// 刪除會話
+export function deleteSession(sessionId: string): boolean {
+  if (sessions[sessionId]) {
+    delete sessions[sessionId];
+    return true;
+  }
+  return false;
+}
+
+// 更新用戶資料
+export function updateUserData(userId: string, updates: Partial<Omit<typeof users[0], 'id'>>) {
+  const userIndex = users.findIndex(user => user.id === userId);
+  if (userIndex === -1) return null;
+
+  // 不允許更新 id
+  const { id, ...allowedUpdates } = updates as any;
+  
+  // 更新用戶
+  users[userIndex] = {
+    ...users[userIndex],
+    ...allowedUpdates
+  };
+
+  return users[userIndex];
 } 
