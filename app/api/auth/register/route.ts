@@ -1,32 +1,13 @@
 import { NextResponse } from 'next/server';
-import { addUser, getUserByEmail } from '@/app/lib/db';
-
-// 模擬用戶數據庫
-let users = [
-  {
-    id: '1',
-    email: 'admin@example.com',
-    password: 'admin123',
-    firstName: 'Admin',
-    lastName: 'User',
-    role: 'admin',
-    memberLevel: 3,
-    isMember: true
-  },
-  {
-    id: '2',
-    email: 'user@example.com',
-    password: 'user123',
-    firstName: 'Normal',
-    lastName: 'User',
-    role: 'user',
-    memberLevel: 1,
-    isMember: true
-  }
-];
+import connectToDatabase from '@/app/lib/mongodb';
+import UserModel, { IUser } from '@/app/models/User';
+import SessionModel from '@/app/models/Session';
 
 export async function POST(request: Request) {
   try {
+    // 連接到MongoDB
+    await connectToDatabase();
+    
     const { email, password, firstName, lastName } = await request.json();
 
     // 簡單的驗證
@@ -54,7 +35,7 @@ export async function POST(request: Request) {
     }
 
     // 檢查電子郵件是否已存在
-    const existingUser = getUserByEmail(email);
+    const existingUser = await UserModel.findByEmail(email);
     if (existingUser) {
       return NextResponse.json(
         { error: '此電子郵件已被註冊' },
@@ -63,7 +44,7 @@ export async function POST(request: Request) {
     }
 
     // 創建新用戶
-    const newUser = addUser({
+    const newUser = new UserModel({
       email,
       password,
       firstName: firstName || email.split('@')[0],
@@ -72,20 +53,38 @@ export async function POST(request: Request) {
       isMember: true
     });
 
-    if (!newUser) {
-      return NextResponse.json(
-        { error: '註冊用戶失敗' },
-        { status: 500 }
-      );
-    }
+    // 保存用戶 (密碼將通過中間件自動加密)
+    await newUser.save();
 
-    // 創建用戶資料 (移除密碼)
-    const { password: _, ...userWithoutPassword } = newUser;
+    // 獲取用戶ID (確保類型正確)
+    const userId = newUser._id ? newUser._id.toString() : '';
 
-    return NextResponse.json({
+    // 創建會話
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 7); // 7天後過期
+    const session = await SessionModel.createSession(userId, expiresAt);
+    
+    // 移除敏感資訊
+    const userData = newUser.toObject();
+    const { password: _, ...userWithoutPassword } = userData;
+    
+    // 創建響應
+    const response = NextResponse.json({
+      success: true,
       user: userWithoutPassword,
       message: '註冊成功'
     });
+    
+    // 設置 cookie
+    response.cookies.set({
+      name: 'sessionToken',
+      value: session.token,
+      httpOnly: true,
+      path: '/',
+      expires: expiresAt
+    });
+    
+    return response;
   } catch (error) {
     console.error('註冊錯誤:', error);
     return NextResponse.json(
