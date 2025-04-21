@@ -14,6 +14,7 @@ export interface AuthContextType {
   logout: () => Promise<boolean>;
   updateUser: () => Promise<boolean>;
   getToken: () => Promise<string | null>;
+  clearError: () => void;
 }
 
 // 創建身份驗證上下文
@@ -31,6 +32,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastRefreshTime, setLastRefreshTime] = useState<number>(Date.now());
+
+  // 清除錯誤信息
+  const clearError = () => {
+    setError(null);
+  };
 
   // 檢查用戶是否已通過身份驗證
   const refreshAuth = async () => {
@@ -406,7 +412,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     register: handleRegister,
     logout: handleLogout,
     updateUser,
-    getToken
+    getToken,
+    clearError
   };
   
   return (
