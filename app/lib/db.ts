@@ -295,8 +295,8 @@ export function saveSessions(sessions: Record<string, Session>): boolean {
   }
 }
 
-// 創建新會話
-export function createSession(userId: string, expiresAt?: string): string {
+// 創建新會話（文件系統）
+export function createFileSession(userId: string, expiresAt?: string): string {
   try {
     const sessions = getSessions();
     
@@ -323,8 +323,8 @@ export function createSession(userId: string, expiresAt?: string): string {
   }
 }
 
-// 獲取會話信息
-export function getSession(sessionId: string): { userId: string, expires: Date } | null {
+// 獲取會話信息（文件系統）
+export function getFileSession(sessionId: string): { userId: string, expires: Date } | null {
   try {
     const sessions = getSessions();
     const session = sessions[sessionId];
@@ -352,8 +352,8 @@ export function getSession(sessionId: string): { userId: string, expires: Date }
   }
 }
 
-// 刪除會話
-export function deleteSession(sessionId: string): boolean {
+// 刪除會話（文件系統）
+export function deleteFileSession(sessionId: string): boolean {
   try {
     const sessions = getSessions();
     
@@ -704,27 +704,6 @@ export function createUser(userData: {
   return newUser;
 }
 
-// 創建會話
-export function createSession(userId: string, expiresAt: string): string {
-  const sessionId = generateSessionId();
-  sessions[sessionId] = { userId, expiresAt };
-  return sessionId;
-}
-
-// 獲取會話
-export function getSession(sessionId: string) {
-  return sessions[sessionId];
-}
-
-// 刪除會話
-export function deleteSession(sessionId: string): boolean {
-  if (sessions[sessionId]) {
-    delete sessions[sessionId];
-    return true;
-  }
-  return false;
-}
-
 // 更新用戶資料
 export function updateUserData(userId: string, updates: Partial<Omit<typeof users[0], 'id'>>) {
   const userIndex = users.findIndex(user => user.id === userId);
@@ -740,4 +719,25 @@ export function updateUserData(userId: string, updates: Partial<Omit<typeof user
   };
 
   return users[userIndex];
+}
+
+// 創建會話 (內存)
+export function createMemorySession(userId: string, expiresAt: string): string {
+  const sessionId = generateSessionId();
+  sessions[sessionId] = { userId, expiresAt };
+  return sessionId;
+}
+
+// 獲取會話 (內存)
+export function getMemorySession(sessionId: string) {
+  return sessions[sessionId];
+}
+
+// 刪除會話 (內存)
+export function deleteMemorySession(sessionId: string): boolean {
+  if (sessions[sessionId]) {
+    delete sessions[sessionId];
+    return true;
+  }
+  return false;
 } 
