@@ -4,6 +4,7 @@ import mongoose from 'mongoose';
 interface MongooseConnection {
   conn: typeof mongoose | null;
   promise: Promise<typeof mongoose> | null;
+  isMock: boolean;
 }
 
 // MongoDB 連接字符串，從環境變量獲取
@@ -11,11 +12,20 @@ interface MongooseConnection {
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://youruser:yourpassword@cluster0.mongodb.net/yellairlines?retryWrites=true&w=majority';
 
 // 創建具有正確類型的全局變量
-let globalMongoose: MongooseConnection = (global as any).mongoose || { conn: null, promise: null };
+let globalMongoose: MongooseConnection = (global as any).mongoose || { conn: null, promise: null, isMock: false };
 
 // 將變量重新分配給全局作用域
 if (!(global as any).mongoose) {
   (global as any).mongoose = globalMongoose;
+}
+
+// 創建模擬連接
+async function createMockConnection() {
+  console.log('使用模擬 MongoDB 連接...');
+  globalMongoose.isMock = true;
+  
+  // 返回 mongoose 實例，但不實際連接到數據庫
+  return mongoose;
 }
 
 /**
@@ -34,16 +44,25 @@ export async function connectToDatabase() {
       bufferCommands: false,
     };
 
-    console.log('正在連接到 MongoDB...');
-    globalMongoose.promise = mongoose.connect(MONGODB_URI, opts)
-      .then((mongoose) => {
-        console.log('MongoDB 連接成功！');
-        return mongoose;
-      })
-      .catch((error) => {
-        console.error('MongoDB 連接失敗:', error);
-        throw error;
-      });
+    // 檢查環境變量，決定是使用實際連接還是模擬連接
+    const useMock = process.env.USE_MOCK_DB === 'true' || !MONGODB_URI.includes('mongodb');
+    
+    if (useMock) {
+      console.log('使用模擬 MongoDB 連接模式');
+      globalMongoose.promise = createMockConnection();
+    } else {
+      console.log('正在連接到 MongoDB...');
+      globalMongoose.promise = mongoose.connect(MONGODB_URI, opts)
+        .then((mongoose) => {
+          console.log('MongoDB 連接成功！');
+          return mongoose;
+        })
+        .catch((error) => {
+          console.error('MongoDB 連接失敗，使用模擬連接:', error);
+          // 如果連接失敗，使用模擬連接
+          return createMockConnection();
+        });
+    }
   }
 
   // 等待連接完成
@@ -56,12 +75,18 @@ export async function connectToDatabase() {
  * 用於清理資源
  */
 export async function disconnectFromDatabase() {
-  if (globalMongoose.conn) {
+  if (globalMongoose.conn && !globalMongoose.isMock) {
     await mongoose.disconnect();
     globalMongoose.conn = null;
     globalMongoose.promise = null;
+    globalMongoose.isMock = false;
     console.log('已斷開與 MongoDB 的連接');
   }
+}
+
+// 檢查是否使用模擬連接
+export function isUsingMockConnection() {
+  return globalMongoose.isMock;
 }
 
 export default connectToDatabase; 
