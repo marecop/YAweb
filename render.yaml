@@ -7,6 +7,7 @@ services:
       echo "執行緊急修復..."
       node scripts/render-build-override.js
       node scripts/render-env-setup.js
+      node scripts/fix-register-page-tailwind.js
       npm install && npm run build
     startCommand: npm start
     healthCheckPath: /
