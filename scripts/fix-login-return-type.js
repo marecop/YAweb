@@ -119,8 +119,8 @@ function directFixLoginPage() {
   let content = fs.readFileSync(loginPagePath, 'utf8');
   const originalContent = content;
   
-  // 修復 console.log 中的變量名問題
-  if (content.includes("console.log('登入結果:', success)") && content.includes('const loginResult =')) {
+  // 修復 console.log 中的變量名問題 - 不再需要檢查 const loginResult 是否存在
+  if (content.includes("console.log('登入結果:', success)")) {
     content = content.replace(
       "console.log('登入結果:', success);",
       "console.log('登入結果:', loginResult);"
