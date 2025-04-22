@@ -19,10 +19,13 @@ export default function LoginPage() {
     console.log('嘗試登入:', email);
     
     try {
-      const loginResult = await login(email, password);
+      // 先獲取登入結果並存儲，確保它不是 void 類型
+      // 先獲取登入結果並存儲，確保它不是 void 類型
+      const loginResult = await login($1);
       console.log('登入結果:', loginResult);
       
-      if (loginResult === true) {
+      // 使用 Boolean 轉換而不是嚴格比較，避免類型錯誤
+      if (loginResult) {
         // 獲取重定向 URL（如果有）
         const urlParams = new URLSearchParams(window.location.search);
         const redirectUrl = urlParams.get('redirect') || '/member';
