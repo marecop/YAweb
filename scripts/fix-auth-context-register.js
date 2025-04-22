@@ -257,7 +257,8 @@ export default function RegisterPage() {
       </div>
     </div>
   );
-}`;
+}
+`;
     
     // 寫入更新的文件內容
     fs.writeFileSync(registerPagePath, correctRegisterPageContent, 'utf8');
@@ -271,32 +272,178 @@ export default function RegisterPage() {
     
     let authLibContent = fs.readFileSync(authLibPath, 'utf8');
     
-    // 修改register函數以接受四個獨立參數而非RegisterParams對象
-    const registerFunctionPattern = /export\s+async\s+function\s+register\s*\(\s*params\s*:\s*RegisterParams\s*\)\s*:\s*Promise<AuthResponse>/;
-    if (registerFunctionPattern.test(authLibContent)) {
-      console.log('修改register函數簽名...');
+    // 直接寫入新的register函數內容
+    console.log('準備重寫register函數...');
+    
+    // 嘗試通過關鍵字定位register函數位置
+    const registerStartIndex = authLibContent.indexOf('// 用戶註冊');
+    const registerEndIndex = authLibContent.indexOf('// 用戶登出', registerStartIndex);
+    
+    if (registerStartIndex !== -1 && registerEndIndex !== -1) {
+      console.log('找到register函數位置，進行替換...');
       
-      // 替換函數簽名
-      authLibContent = authLibContent.replace(
-        registerFunctionPattern,
-        'export async function register(firstName: string, lastName: string, email: string, password: string): Promise<AuthResponse>'
-      );
+      // 提取register函數前後的內容
+      const contentBefore = authLibContent.substring(0, registerStartIndex);
+      const contentAfter = authLibContent.substring(registerEndIndex);
       
-      // 替換函數內部使用params的地方
-      authLibContent = authLibContent.replace(
-        /const\s+{\s*email\s*,\s*password\s*,\s*firstName\s*,\s*lastName\s*}\s*=\s*params\s*;/,
-        '// 直接使用函數參數'
-      );
-      
-      // 替換JSON.stringify(params)
-      authLibContent = authLibContent.replace(
-        /body\s*:\s*JSON\.stringify\s*\(\s*params\s*\)/,
-        'body: JSON.stringify({ email, password, firstName, lastName })'
-      );
-      
-      fs.writeFileSync(authLibPath, authLibContent, 'utf8');
-      console.log('✅ 已修改auth.ts中的register函數');
+      // 新的register函數實現
+      const newRegisterFunction = `// 用戶註冊
+export async function register(firstName: string, lastName: string, email: string, password: string): Promise<AuthResponse> {
+  try {
+    console.log('發送註冊請求');
+    
+    // 添加超時處理
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10秒超時
+    
+    const response = await fetch('/api/auth', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ firstName, lastName, email, password }),
+      credentials: 'include', // 包含 cookies
+      signal: controller.signal
+    });
+    
+    clearTimeout(timeoutId);
+    
+    console.log('註冊請求完成', response.status);
+    const data = await response.json();
+    console.log('註冊響應數據', data);
+    
+    return {
+      authenticated: !!data.authenticated || !!data.user,
+      user: data.user,
+      error: data.error,
+      localStorage: data.localStorage || {
+        key: "userSession",
+        value: ""
+      }
+    };
+  } catch (error: any) {
+    console.error('註冊失敗:', error);
+    
+    // 檢查是否為超時錯誤
+    if (error.name === 'AbortError') {
+      const emptyLocalStorage = {
+        key: "userSession",
+        value: ""
+      };
+      return {
+        authenticated: false,
+        user: {} as User,
+        error: '註冊請求超時，請檢查網絡連接',
+        localStorage: emptyLocalStorage
+      };
     }
+    
+    const emptyLocalStorage = {
+      key: "userSession",
+      value: ""
+    };
+    return {
+      authenticated: false,
+      user: {} as User,
+      error: '註冊過程中發生錯誤: ' + (error.message || '未知錯誤'),
+      localStorage: emptyLocalStorage
+    };
+  }
+}
+`;
+      
+      // 組合新的文件內容
+      const newContent = contentBefore + newRegisterFunction + contentAfter;
+      
+      // 寫入新的文件內容
+      fs.writeFileSync(authLibPath, newContent, 'utf8');
+      console.log('✅ 已成功重寫auth.ts中的register函數');
+    } else {
+      console.error('❌ 無法在auth.ts中找到register函數的位置');
+      
+      // 備用方案：直接全部替換函數
+      console.log('嘗試使用正則表達式匹配register函數...');
+      
+      // 使用正則表達式匹配register函數
+      const registerFunctionPattern = /export\s+async\s+function\s+register\s*\([^)]*\)\s*:\s*Promise<AuthResponse>\s*{[\s\S]*?return[\s\S]*?;[\s\S]*?}/;
+      if (registerFunctionPattern.test(authLibContent)) {
+        console.log('找到register函數的模式匹配，進行替換...');
+        
+        // 替換註冊函數
+        authLibContent = authLibContent.replace(
+          registerFunctionPattern,
+          `export async function register(firstName: string, lastName: string, email: string, password: string): Promise<AuthResponse> {
+  try {
+    console.log('發送註冊請求');
+    
+    // 添加超時處理
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10秒超時
+    
+    const response = await fetch('/api/auth', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ firstName, lastName, email, password }),
+      credentials: 'include', // 包含 cookies
+      signal: controller.signal
+    });
+    
+    clearTimeout(timeoutId);
+    
+    console.log('註冊請求完成', response.status);
+    const data = await response.json();
+    console.log('註冊響應數據', data);
+    
+    return {
+      authenticated: !!data.authenticated || !!data.user,
+      user: data.user,
+      error: data.error,
+      localStorage: data.localStorage || {
+        key: "userSession",
+        value: ""
+      }
+    };
+  } catch (error: any) {
+    console.error('註冊失敗:', error);
+    
+    // 檢查是否為超時錯誤
+    if (error.name === 'AbortError') {
+      const emptyLocalStorage = {
+        key: "userSession",
+        value: ""
+      };
+      return {
+        authenticated: false,
+        user: {} as User,
+        error: '註冊請求超時，請檢查網絡連接',
+        localStorage: emptyLocalStorage
+      };
+    }
+    
+    const emptyLocalStorage = {
+      key: "userSession",
+      value: ""
+    };
+    return {
+      authenticated: false,
+      user: {} as User,
+      error: '註冊過程中發生錯誤: ' + (error.message || '未知錯誤'),
+      localStorage: emptyLocalStorage
+    };
+  }
+}`
+        );
+        
+        fs.writeFileSync(authLibPath, authLibContent, 'utf8');
+        console.log('✅ 已通過正則表達式替換register函數');
+      } else {
+        console.error('❌ 無法找到register函數的匹配模式，修復失敗');
+      }
+    }
+  } else {
+    console.error(`❌ 找不到auth.ts文件：${authLibPath}`);
   }
 } else {
   console.error(`❌ 找不到AuthContext文件：${authContextPath}`);
