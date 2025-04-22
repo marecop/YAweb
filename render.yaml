@@ -6,6 +6,7 @@ services:
     buildCommand: |
       echo "執行緊急修復..."
       node scripts/render-build-override.js
+      node scripts/render-env-setup.js
       npm install && npm run build
     startCommand: npm start
     healthCheckPath: /
@@ -15,4 +16,10 @@ services:
       - key: SKIP_BUILD_CACHE
         value: true
       - key: DISABLE_CACHE
-        value: true 
+        value: true
+      - key: MONGODB_URI
+        value: mongodb+srv://yelluser:yell2024pass@cluster0.atvupvb.mongodb.net/yellairlines?retryWrites=true&w=majority
+      - key: USE_MOCK_DB
+        value: "false"
+      - key: JWT_SECRET
+        value: yellow_airlines_jwt_secret_key_2024 
