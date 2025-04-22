@@ -86,31 +86,50 @@ function fixAuthContextLoginType() {
   let content = fs.readFileSync(authContextPath, 'utf8');
   const originalContent = content;
   
+  let modified = false;
+  
   // 確保 login 函數一定返回 boolean 而不是可能的 void
-  if (content.includes('setLoading(false);') && content.includes('handleLogin')) {
-    console.log('確保 login 函數總是返回 boolean 值...');
+  if (content.includes('handleLogin = async') || content.includes('handleLogin =')) {
+    console.log('確保 login 函數總是顯式返回 boolean 值...');
     
-    // 確保總是有返回值
+    // 確保函數總是顯式返回 boolean 值
     content = content.replace(
-      /setLoading\(false\);(\s*)return false;/g,
+      /setLoading\(false\);(\s*)(return false;)?/g,
       'setLoading(false);\n        return false;'
+    );
+    
+    content = content.replace(
+      /setUser\(userData\);(\s*)(return true;)?/g,
+      'setUser(userData);\n        return true;'
     );
     
     // 確保 Promise<boolean> 類型明確定義
     content = content.replace(
-      /handleLogin = async \(email: string, password: string\): Promise<boolean>/g,
-      'handleLogin = async (email: string, password: string): Promise<boolean>'
+      /handleLogin\s*=\s*async\s*\(email: string, password: string\)[^{]*/,
+      'handleLogin = async (email: string, password: string): Promise<boolean> '
     );
     
     // 在 interface 中確保 login 類型正確
     content = content.replace(
-      /login: \(email: string, password: string\) => Promise<[^>]*>/g,
+      /login:\s*\(email: string, password: string\)\s*=>\s*Promise<[^>]*>/,
       'login: (email: string, password: string) => Promise<boolean>'
     );
+    
+    modified = true;
+  }
+  
+  // 明確強制類型檢查
+  if (content.includes('const contextValue')) {
+    console.log('確保 contextValue 中的 login 函數明確定義為 Promise<boolean>...');
+    content = content.replace(
+      /login: handleLogin,/,
+      'login: handleLogin as (email: string, password: string) => Promise<boolean>,'
+    );
+    modified = true;
   }
   
   // 如果內容已更改，保存文件
-  if (content !== originalContent) {
+  if (modified) {
     console.log('修復 AuthContext.tsx 並保存...');
     fs.writeFileSync(authContextPath, content, 'utf8');
     return true;

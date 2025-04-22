@@ -31,7 +31,7 @@ export default function LoginPage() {
       const loginResult = await login(email, password);
       console.log('登入結果:', loginResult);
       
-      if (loginResult) {
+      if (loginResult === true) {
         // 獲取重定向 URL（如果有）
         const urlParams = new URLSearchParams(window.location.search);
         const redirectUrl = urlParams.get('redirect') || '/member';
