@@ -1,24 +1,27 @@
 const fs = require('fs');
 const path = require('path');
 
-console.log('🔧 開始修復特定文件...');
+console.log('開始修復特定文件和路徑...');
 
-// 需要修復的文件列表及其修復邏輯
+// 確保 contexts 目錄存在
+const contextsDir = path.join(process.cwd(), 'app', 'contexts');
+if (!fs.existsSync(contextsDir)) {
+  console.log('創建 contexts 目錄...');
+  fs.mkdirSync(contextsDir, { recursive: true });
+}
+
+// 定義需要修復的文件
 const filesToFix = [
   {
     path: 'app/bookings/page.tsx',
     replacements: [
       {
-        from: /from\s+['"]@\/app\/contexts\/AuthContext['"]/g,
-        to: "from '../../contexts/AuthContext'"
+        from: /@\/app\/contexts\/AuthContext/g,
+        to: '../../contexts/AuthContext'
       },
       {
-        from: /from\s+['"]@\/app\/contexts\/CurrencyContext['"]/g,
-        to: "from '../../contexts/CurrencyContext'"
-      },
-      {
-        from: /from\s+['"]@\/utils\/bookingService['"]/g,
-        to: "from '../../utils/bookingService'"
+        from: /@\/app\/contexts\/CurrencyContext/g,
+        to: '../../contexts/CurrencyContext'
       }
     ]
   },
@@ -26,16 +29,12 @@ const filesToFix = [
     path: 'app/bookings/[bookingId]/page.tsx',
     replacements: [
       {
-        from: /from\s+['"]@\/app\/contexts\/AuthContext['"]/g,
-        to: "from '../../../contexts/AuthContext'"
+        from: /@\/app\/contexts\/AuthContext/g,
+        to: '../../../contexts/AuthContext'
       },
       {
-        from: /from\s+['"]@\/app\/contexts\/CurrencyContext['"]/g,
-        to: "from '../../../contexts/CurrencyContext'"
-      },
-      {
-        from: /from\s+['"]@\/utils\/bookingService['"]/g,
-        to: "from '../../../utils/bookingService'"
+        from: /@\/app\/contexts\/CurrencyContext/g,
+        to: '../../../contexts/CurrencyContext'
       }
     ]
   },
@@ -43,8 +42,8 @@ const filesToFix = [
     path: 'app/auth/login/page.tsx',
     replacements: [
       {
-        from: /from\s+['"]@\/app\/contexts\/AuthContext['"]/g,
-        to: "from '../../../contexts/AuthContext'"
+        from: /@\/app\/contexts\/AuthContext/g,
+        to: '../../../contexts/AuthContext'
       }
     ]
   },
@@ -61,19 +60,15 @@ const filesToFix = [
     path: 'app/components/Header.tsx',
     replacements: [
       {
-        from: /from\s+['"]@\/app\/contexts\/AuthContext['"]/g,
-        to: "from '../../contexts/AuthContext'"
+        from: /@\/app\/contexts\/AuthContext/g,
+        to: '../contexts/AuthContext'
       },
       {
-        from: /from\s+['"]@\/app\/contexts\/CurrencyContext['"]/g,
-        to: "from '../../contexts/CurrencyContext'"
+        from: /@\/app\/contexts\/CurrencyContext/g,
+        to: '../contexts/CurrencyContext'
       },
       {
         from: /from\s+['"]@\/app\/utils\/memberUtils['"]/g,
-        to: "from '../../utils/memberUtils'"
-      },
-      {
-        from: /from\s+['"]@\/utils\/memberUtils['"]/g,
         to: "from '../../utils/memberUtils'"
       },
       {
@@ -116,8 +111,8 @@ const filesToFix = [
     path: 'app/member/page.tsx',
     replacements: [
       {
-        from: /from\s+['"]@\/app\/contexts\/AuthContext['"]/g,
-        to: "from '../../contexts/AuthContext'"
+        from: /@\/app\/contexts\/AuthContext/g,
+        to: '../../contexts/AuthContext'
       },
       {
         from: /from\s+['"]@\/app\/utils\/memberUtils['"]/g,
@@ -154,295 +149,114 @@ const filesToFix = [
         to: "from '../../contexts/AuthContext'"
       }
     ]
+  },
+  // 修復 MongoDB 連接字符串配置
+  {
+    path: 'app/lib/mongodb.ts',
+    replacements: [
+      {
+        from: /const MONGODB_URI = process\.env\.MONGODB_URI \|\| ['"]mongodb\+srv:\/\/youruser:yourpassword@cluster0\.mongodb\.net\/yellairlines\?retryWrites=true&w=majority['"];/g,
+        to: 'const MONGODB_URI = process.env.MONGODB_URI || \'mongodb+srv://yelluser:yell2024pass@cluster0.atvupvb.mongodb.net/yellairlines?retryWrites=true&w=majority\';'
+      }
+    ]
   }
 ];
 
-// 確保contexts目錄存在
-const contextsDir = path.join(__dirname, '../contexts');
-if (!fs.existsSync(contextsDir)) {
-  fs.mkdirSync(contextsDir, { recursive: true });
-  console.log(`   創建目錄: contexts`);
+// 設置環境變數檢查和自動降級到模擬數據庫
+const envConfigToAdd = `
+// 環境變數檢查和配置
+export function getMongoDBConfig() {
+  const isProduction = process.env.NODE_ENV === 'production';
+  const useMockDB = process.env.USE_MOCK_DB === 'true';
+  const mongodbUri = process.env.MONGODB_URI || 'mongodb+srv://yelluser:yell2024pass@cluster0.atvupvb.mongodb.net/yellairlines?retryWrites=true&w=majority';
+  
+  return {
+    isProduction,
+    useMockDB,
+    mongodbUri,
+    shouldUseMockDB: useMockDB || !mongodbUri.includes('mongodb')
+  };
 }
-
-// 確保utils目錄存在
-const utilsDir = path.join(__dirname, '../utils');
-if (!fs.existsSync(utilsDir)) {
-  fs.mkdirSync(utilsDir, { recursive: true });
-  console.log(`   創建目錄: utils`);
-}
-
-// 確保app/utils目錄存在
-const appUtilsDir = path.join(__dirname, '../app/utils');
-if (!fs.existsSync(appUtilsDir)) {
-  fs.mkdirSync(appUtilsDir, { recursive: true });
-  console.log(`   創建目錄: app/utils`);
-}
-
-// 創建必要的memberUtils.ts文件
-const memberUtilsPath = path.join(utilsDir, 'memberUtils.ts');
-const memberUtilsContent = `
-export const getMemberLevelName = (level: number): string => {
-  switch (level) {
-    case 1:
-      return '普通會員';
-    case 2:
-      return '銀卡會員';
-    case 3:
-      return '金卡會員';
-    case 4:
-      return '白金會員';
-    default:
-      return '未知會員等級';
-  }
-};
-
-export const getMemberLevelColorClass = (level: number): string => {
-  switch (level) {
-    case 1:
-      return 'text-gray-500';
-    case 2:
-      return 'text-silver-500';
-    case 3:
-      return 'text-gold-500';
-    case 4:
-      return 'text-platinum-500';
-    default:
-      return 'text-gray-500';
-  }
-};
 `;
 
-// 在根目錄下的 utils 中創建文件
-if (!fs.existsSync(memberUtilsPath)) {
-  console.log(`   創建文件: utils/memberUtils.ts`);
-  fs.writeFileSync(memberUtilsPath, memberUtilsContent);
-}
-
-// 在 app/utils 中創建文件
-const appMemberUtilsPath = path.join(appUtilsDir, 'memberUtils.ts');
-if (!fs.existsSync(appMemberUtilsPath)) {
-  console.log(`   創建文件: app/utils/memberUtils.ts`);
-  fs.writeFileSync(appMemberUtilsPath, memberUtilsContent);
-}
-
-// 創建必要的AuthContext文件
-const authContextPath = path.join(contextsDir, 'AuthContext.tsx');
-if (!fs.existsSync(authContextPath)) {
-  console.log(`   創建文件: contexts/AuthContext.tsx`);
-  fs.writeFileSync(authContextPath, `
-'use client';
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-
-type User = {
-  id: string;
-  firstName?: string;
-  lastName?: string;
-  email: string;
-  role: string;
-  memberLevel?: number;
-  isMember?: boolean;
-};
-
-type AuthContextType = {
-  user: User | null;
-  isLoggedIn: boolean;
-  loading: boolean;
-  login: (email: string, password: string) => Promise<boolean>;
-  logout: () => Promise<void>;
-};
-
-const AuthContext = createContext<AuthContextType>({
-  user: null,
-  isLoggedIn: false,
-  loading: true,
-  login: async () => false,
-  logout: async () => {},
-});
-
-export const useAuth = () => useContext(AuthContext);
-
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    setLoading(false);
-  }, []);
-
-  const login = async (email: string, password: string) => {
-    // 模擬登入
-    setUser({ 
-      id: '1', 
-      email, 
-      firstName: 'User', 
-      lastName: 'Name', 
-      role: 'user',
-      memberLevel: 1,
-      isMember: true
-    });
-    return true;
-  };
-
-  const logout = async () => {
-    setUser(null);
-  };
-
-  return (
-    <AuthContext.Provider
-      value={{
-        user,
-        isLoggedIn: !!user,
-        loading,
-        login,
-        logout,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
-  );
-};
-`);
-}
-
-// 創建必要的CurrencyContext文件
-const currencyContextPath = path.join(contextsDir, 'CurrencyContext.tsx');
-if (!fs.existsSync(currencyContextPath)) {
-  console.log(`   創建文件: contexts/CurrencyContext.tsx`);
-  fs.writeFileSync(currencyContextPath, `
-'use client';
-import { createContext, useContext, useState, ReactNode } from 'react';
-
-type CurrencyContextType = {
-  currency: string;
-  setCurrency: (currency: string) => void;
-  formatPrice: (price: number) => string;
-  exchangeRate: (currency: string) => number;
-};
-
-const currencyRates = {
-  TWD: 1,
-  USD: 0.032,
-  EUR: 0.029,
-  JPY: 4.9,
-  GBP: 0.025,
-  AUD: 0.049,
-  CNY: 0.23,
-  HKD: 0.25
-};
-
-const CurrencyContext = createContext<CurrencyContextType>({
-  currency: 'TWD',
-  setCurrency: () => {},
-  formatPrice: () => '',
-  exchangeRate: () => 1
-});
-
-export const useCurrency = () => useContext(CurrencyContext);
-
-export const CurrencyProvider = ({ children }: { children: ReactNode }) => {
-  const [currency, setCurrency] = useState<string>('TWD');
-
-  const formatPrice = (price: number): string => {
-    const rate = currencyRates[currency] || 1;
-    let convertedPrice = currency === 'TWD' ? price : price * rate;
-    
-    // 格式化價格，添加貨幣符號和千位分隔符
-    const formatter = new Intl.NumberFormat('zh-TW', {
-      style: 'currency',
-      currency: currency,
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    });
-    
-    return formatter.format(convertedPrice);
-  };
-
-  const exchangeRate = (targetCurrency: string): number => {
-    if (currency === targetCurrency) return 1;
-    const sourceCurrencyRate = currencyRates[currency] || 1;
-    const targetCurrencyRate = currencyRates[targetCurrency] || 1;
-    return targetCurrencyRate / sourceCurrencyRate;
-  };
-
-  return (
-    <CurrencyContext.Provider value={{ currency, setCurrency, formatPrice, exchangeRate }}>
-      {children}
-    </CurrencyContext.Provider>
-  );
-};
-`);
-}
-
-// 修正 app/components/Header.tsx
-const headerFilePath = path.join(__dirname, '../app/components/Header.tsx');
-if (fs.existsSync(headerFilePath)) {
-  console.log(`   直接修復: app/components/Header.tsx`);
-  
-  let headerContent = fs.readFileSync(headerFilePath, 'utf8');
-  
-  // 修改 Header.tsx 的導入語句
-  const updatedHeaderContent = headerContent.replace(
-    /import\s+{\s*getMemberLevelName\s*,\s*getMemberLevelColorClass\s*}\s+from\s+(['"]).*?(['"])/g,
-    "import { getMemberLevelName, getMemberLevelColorClass } from '../utils/memberUtils'"
-  );
-  
-  if (updatedHeaderContent !== headerContent) {
-    fs.writeFileSync(headerFilePath, updatedHeaderContent, 'utf8');
-    console.log(`   ✅ 已修復: app/components/Header.tsx 的導入語句`);
-  } else {
-    console.log(`   ⚠️ 沒有找到需要修復的導入語句: app/components/Header.tsx`);
-  }
-}
-
-// 修正 app/member/page.tsx
-const memberPagePath = path.join(__dirname, '../app/member/page.tsx');
-if (fs.existsSync(memberPagePath)) {
-  console.log(`   直接修復: app/member/page.tsx`);
-  
-  let memberPageContent = fs.readFileSync(memberPagePath, 'utf8');
-  
-  // 修改 member/page.tsx 的導入語句
-  const updatedMemberPageContent = memberPageContent.replace(
-    /import\s+{\s*getMemberLevelName\s*,\s*getMemberLevelColorClass\s*}\s+from\s+(['"]).*?(['"])/g,
-    "import { getMemberLevelName, getMemberLevelColorClass } from '../utils/memberUtils'"
-  );
-  
-  if (updatedMemberPageContent !== memberPageContent) {
-    fs.writeFileSync(memberPagePath, updatedMemberPageContent, 'utf8');
-    console.log(`   ✅ 已修復: app/member/page.tsx 的導入語句`);
-  } else {
-    console.log(`   ⚠️ 沒有找到需要修復的導入語句: app/member/page.tsx`);
-  }
-}
-
-// 修復文件
-let fixedCount = 0;
-filesToFix.forEach(file => {
-  const filePath = path.join(__dirname, '..', file.path);
-  
-  if (fs.existsSync(filePath)) {
-    console.log(`   處理文件: ${file.path}`);
-    let content = fs.readFileSync(filePath, 'utf8');
-    let modified = false;
-    
-    file.replacements.forEach(replacement => {
-      const newContent = content.replace(replacement.from, replacement.to);
-      if (newContent !== content) {
-        content = newContent;
-        modified = true;
-      }
-    });
-    
-    if (modified) {
-      fs.writeFileSync(filePath, content, 'utf8');
-      console.log(`   ✅ 已修復: ${file.path}`);
-      fixedCount++;
-    } else {
-      console.log(`   ⚠️ 無需修復: ${file.path}`);
+// 檢查 mongodb.ts 文件以添加配置函數
+const mongodbFilePath = path.join(process.cwd(), 'app', 'lib', 'mongodb.ts');
+if (fs.existsSync(mongodbFilePath)) {
+  let mongodbContent = fs.readFileSync(mongodbFilePath, 'utf8');
+  if (!mongodbContent.includes('getMongoDBConfig')) {
+    // 找到文件的末尾，但在 export default 語句之前
+    const exportDefaultIndex = mongodbContent.lastIndexOf('export default');
+    if (exportDefaultIndex !== -1) {
+      mongodbContent = mongodbContent.slice(0, exportDefaultIndex) + envConfigToAdd + mongodbContent.slice(exportDefaultIndex);
+      fs.writeFileSync(mongodbFilePath, mongodbContent, 'utf8');
+      console.log('更新了 MongoDB 配置函數到 app/lib/mongodb.ts');
     }
-  } else {
-    console.log(`   ❌ 文件不存在: ${file.path}`);
   }
-});
+}
 
-console.log(`🎉 完成！共修復了 ${fixedCount} 個文件。`); 
+// 處理每個文件
+let fixedCount = 0;
+for (const file of filesToFix) {
+  const filePath = path.join(process.cwd(), file.path);
+  
+  if (!fs.existsSync(filePath)) {
+    console.log(`文件不存在，跳過: ${file.path}`);
+    continue;
+  }
+  
+  let content = fs.readFileSync(filePath, 'utf8');
+  let modified = false;
+  
+  for (const replacement of file.replacements) {
+    if (replacement.from.test(content)) {
+      content = content.replace(replacement.from, replacement.to);
+      modified = true;
+    }
+  }
+  
+  if (modified) {
+    fs.writeFileSync(filePath, content, 'utf8');
+    console.log(`✅ 已修復文件: ${file.path}`);
+    fixedCount++;
+  } else {
+    console.log(`⏭️ 文件不需要修復: ${file.path}`);
+  }
+}
+
+console.log(`修復完成。共修復了 ${fixedCount} 個文件。`);
+
+// 檢查 .env 文件並添加 MongoDB 配置
+const envFilePath = path.join(process.cwd(), '.env');
+const envLocalFilePath = path.join(process.cwd(), '.env.local');
+
+const envContent = `# MongoDB 配置
+MONGODB_URI=mongodb+srv://yelluser:yell2024pass@cluster0.atvupvb.mongodb.net/yellairlines?retryWrites=true&w=majority
+# 設置為 true 可以使用模擬數據庫 (不需要真實連接)
+USE_MOCK_DB=false
+`;
+
+// 創建或更新 .env 文件
+if (!fs.existsSync(envFilePath)) {
+  fs.writeFileSync(envFilePath, envContent, 'utf8');
+  console.log('創建了新的 .env 文件，包含 MongoDB 配置');
+} else {
+  let existingEnvContent = fs.readFileSync(envFilePath, 'utf8');
+  if (!existingEnvContent.includes('MONGODB_URI=')) {
+    fs.writeFileSync(envFilePath, existingEnvContent + '\n' + envContent, 'utf8');
+    console.log('更新了 .env 文件，添加了 MongoDB 配置');
+  }
+}
+
+// 創建或更新 .env.local 文件
+if (!fs.existsSync(envLocalFilePath)) {
+  fs.writeFileSync(envLocalFilePath, envContent, 'utf8');
+  console.log('創建了新的 .env.local 文件，包含 MongoDB 配置');
+} else {
+  let existingEnvLocalContent = fs.readFileSync(envLocalFilePath, 'utf8');
+  if (!existingEnvLocalContent.includes('MONGODB_URI=')) {
+    fs.writeFileSync(envLocalFilePath, existingEnvLocalContent + '\n' + envContent, 'utf8');
+    console.log('更新了 .env.local 文件，添加了 MongoDB 配置');
+  }
+}
+
+console.log('所有修復操作已完成！'); 
