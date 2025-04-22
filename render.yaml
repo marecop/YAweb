@@ -1,12 +1,15 @@
 services:
   - type: web
-    name: yellow-airlines
+    name: yellowairlines
     env: node
-    buildCommand: npm ci && npm run fix-directory && npm run build
+    plan: free
+    buildCommand: npm install && npm run build
     startCommand: npm start
+    healthCheckPath: /
     envVars:
       - key: NODE_ENV
         value: production
-      - key: NPM_CONFIG_PRODUCTION
-        value: false
-    plan: free 
+      - key: SKIP_BUILD_CACHE
+        value: true
+      - key: DISABLE_CACHE
+        value: true 
