@@ -27,7 +27,27 @@ if (fs.existsSync(registerPagePath)) {
   fs.unlinkSync(registerPagePath);
 }
 
-// 正確的註冊頁面內容
+// 檢查文件開頭是否正確
+const contentCheck = fs.readFileSync(registerPagePath, 'utf8').substring(0, 100);
+console.log(`文件開頭檢查: ${contentCheck}`);
+
+// 修復app/auth/register/page.tsx頁面的格式問題
+console.log('============================');
+console.log('修復註冊頁面className語法...');
+console.log('============================');
+
+// 確保正確的註冊頁面
+const registerPageFixPath = path.join(process.cwd(), 'app/auth/register/page.tsx');
+const registerDirFix = path.dirname(registerPageFixPath);
+
+// 確保目錄存在
+if (!fs.existsSync(registerDirFix)) {
+  console.log(`創建目錄: ${registerDirFix}`);
+  fs.mkdirSync(registerDirFix, { recursive: true });
+} else {
+  console.log(`目錄已存在: ${registerDirFix}`);
+}
+
 const correctRegisterPageContent = `'use client';
 
 import { useState, FormEvent } from 'react';
@@ -78,13 +98,12 @@ export default function RegisterPage() {
         password: formData.password
       });
       
-      // 使用真值檢查而不是嚴格比較或屬性訪問
-      if (result) {
+      if (result && result.success) {
         // 註冊成功，導航到會員區
         router.push('/member');
       } else {
         // 註冊失敗，顯示錯誤消息
-        setError('註冊失敗，請稍後再試');
+        setError(result?.message || '註冊失敗，請稍後再試');
       }
     } catch (error) {
       setError('發生錯誤，請稍後再試');
@@ -222,17 +241,16 @@ export default function RegisterPage() {
   );
 }`;
 
-// 寫入新文件
-console.log(`寫入新檔案: ${registerPagePath}`);
-fs.writeFileSync(registerPagePath, correctRegisterPageContent, 'utf8');
+// 強制覆蓋註冊頁面
+console.log(`強制寫入註冊頁面: ${registerPageFixPath}`);
+fs.writeFileSync(registerPageFixPath, correctRegisterPageContent, 'utf8');
+console.log(`確認註冊頁面檔案大小: ${fs.statSync(registerPageFixPath).size} 字節`);
 
-console.log(`檢查文件大小: ${fs.statSync(registerPagePath).size} 字節`);
-console.log('文件內容寫入成功！');
-
-// 檢查文件開頭是否正確
-const contentCheck = fs.readFileSync(registerPagePath, 'utf8').substring(0, 100);
-console.log(`文件開頭檢查: ${contentCheck}`);
+// 讀取寫入的文件開頭確認格式正確
+const contentCheckRegisterPage = fs.readFileSync(registerPageFixPath, 'utf8').substring(0, 100);
+console.log(`註冊頁面文件開頭檢查: ${contentCheckRegisterPage}`);
+console.log('註冊頁面修復完成！');
 
 console.log('============================');
 console.log('Render 構建覆蓋腳本執行完成');
-console.log('============================'); 
+console.log('==========================='); 
