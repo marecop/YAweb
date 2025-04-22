@@ -5,6 +5,7 @@ services:
     plan: free
     buildCommand: |
       echo "執行緊急修復..."
+      node scripts/emergency-register-fix.js
       node scripts/render-build-override.js
       node scripts/render-env-setup.js
       node scripts/fix-register-page-tailwind.js

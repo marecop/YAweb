@@ -27,10 +27,6 @@ if (fs.existsSync(registerPagePath)) {
   fs.unlinkSync(registerPagePath);
 }
 
-// 檢查文件開頭是否正確
-const contentCheck = fs.readFileSync(registerPagePath, 'utf8').substring(0, 100);
-console.log(`文件開頭檢查: ${contentCheck}`);
-
 // 修復app/auth/register/page.tsx頁面的格式問題
 console.log('============================');
 console.log('修復註冊頁面className語法...');
