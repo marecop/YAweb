@@ -3,14 +3,14 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '@/app/contexts/AuthContext';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const router = useRouter();
-  const { login, isLoading: loading, error } = useAuth();
+  const { login, isLoading, error } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -19,11 +19,9 @@ export default function LoginPage() {
     console.log('嘗試登入:', email);
     
     try {
-      // 先獲取登入結果並存儲，確保它不是 void 類型
       const loginResult = await login(email, password);
       console.log('登入結果:', loginResult);
       
-      // 使用 Boolean 轉換而不是嚴格比較，避免類型錯誤
       if (loginResult) {
         // 獲取重定向 URL（如果有）
         const urlParams = new URLSearchParams(window.location.search);
@@ -123,18 +121,10 @@ export default function LoginPage() {
             <div>
               <button
                 type="submit"
-                disabled={loading}
-                className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-ya-yellow-600 hover:bg-ya-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ya-yellow-500 ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
+                disabled={isLoading}
+                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-ya-yellow-600 hover:bg-ya-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ya-yellow-500"
               >
-                {loading ? (
-                  <>
-                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    處理中...
-                  </>
-                ) : '登入'}
+                {isLoading ? '處理中...' : '登入'}
               </button>
             </div>
           </form>
