@@ -10,12 +10,11 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const router = useRouter();
-  const { login, isLoading: loading, error, clearError } = useAuth();
+  const { login, isLoading: loading, error } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage('');
-    clearError();
     
     console.log('嘗試登入:', email);
     
