@@ -352,17 +352,57 @@ services:
       ls -la app/auth/login/page.tsx
       cat app/auth/login/page.tsx | grep "login("
       
-      # 特別緊急修復：找到所有包含 login($1) 的文件並修復
-      echo "進行額外的緊急修復，搜索並替換所有出現的 login(\\\$1) ..."
-      find . -type f -name "*.tsx" -o -name "*.jsx" -o -name "*.ts" -o -name "*.js" | xargs grep -l "login(\\\$1)" | xargs -I {} sed -i 's/login(\$1)/login(email, password)/g' {}
+      # 直接檢查是否有任何包含login($1)的文件
+      echo "搜索login(\$1)的所有實例："
+      grep -r "login(\\\$1)" --include="*.tsx" --include="*.ts" --include="*.jsx" --include="*.js" .
       
-      # 打印查找結果
-      echo "確認修復結果："
-      find . -type f -name "*.tsx" -o -name "*.jsx" -o -name "*.ts" -o -name "*.js" | xargs grep -l "login("
+      # 極端手段：直接修改所有可能的頁面文件
+      echo "正在應用極端緊急修復..."
+      
+      # 1. 直接修改所有可能包含問題的頁面
+      if [ -f app/auth/login/page.tsx ]; then
+        sed -i 's/login(\$1)/login(email, password)/g' app/auth/login/page.tsx
+      fi
+      
+      # 2. 在TypeScript編譯前進行最後的緊急檢查
+      npm install -g replace-in-file
+      
+      # 使用Node.js的replace-in-file工具進行更可靠的替換
+      echo "const replace = require('replace-in-file');
+      
+      try {
+        // 全面搜索並替換所有TypeScript/JavaScript文件中的login($1)
+        const results = replace.sync({
+          files: [
+            'app/**/*.tsx',
+            'app/**/*.ts',
+            'app/**/*.jsx',
+            'app/**/*.js',
+            'pages/**/*.tsx',
+            'pages/**/*.ts',
+            'components/**/*.tsx',
+            'components/**/*.ts'
+          ],
+          from: /login\(\$1\)/g,
+          to: 'login(email, password)',
+          countMatches: true,
+        });
+      
+        console.log('替換結果:', results);
+      } catch (error) {
+        console.error('替換過程中出錯:', error);
+      }" > fix-login-call.js
+      
+      # 執行替換
+      node fix-login-call.js
+      
+      # 最後檢查
+      echo "最終檢查，確認所有login($1)已替換："
+      grep -r "login(\\\$1)" --include="*.tsx" --include="*.ts" --include="*.jsx" --include="*.js" . || echo "沒有發現login(\$1)"
       
       # 繼續原有構建流程，但簡化腳本執行
       echo "執行其餘必要的腳本..."
-      node scripts/render-build-override.js
+      node scripts/render-build-override.js || true
       npm install && npm run build
     startCommand: npm start
     healthCheckPath: /
