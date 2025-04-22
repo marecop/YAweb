@@ -4,9 +4,9 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { zhTW } from 'date-fns/locale';
-import { getBookingById, cancelBooking, Booking } from '@/utils/bookingService';
-import { useAuth } from '@/app/contexts/AuthContext';
-import { useCurrency } from '@/app/contexts/CurrencyContext';
+import { getBookingById, cancelBooking, Booking } from '../../../utils/bookingService';
+import { useAuth } from '../../../contexts/AuthContext';
+import { useCurrency } from '../../../contexts/CurrencyContext';
 
 interface BookingDetailsPageProps {
   params: {

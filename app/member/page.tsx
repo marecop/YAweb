@@ -4,9 +4,9 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useAuth } from '@/app/contexts/AuthContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { FaUser, FaPlane, FaTicketAlt, FaCreditCard, FaExchangeAlt, FaCog, FaLock } from 'react-icons/fa';
-import { getMemberLevelName, getMemberLevelColorClass } from '@/app/utils/memberUtils';
+import { getMemberLevelName, getMemberLevelColorClass } from '../utils/memberUtils';
 
 // 定義活動記錄類型
 interface Activity {
@@ -130,7 +130,7 @@ export default function MemberPage() {
   // 根據會員等級獲取顏色
   const getLevelColor = () => {
     if (!user?.memberLevel) return 'bg-blue-100 text-blue-800';
-    return getMemberLevelColorClass(user.memberLevel);
+    return getMemberLevelColorClass(String(user.memberLevel));
   };
   
   // 如果認證正在加載，顯示加載中

@@ -10,7 +10,7 @@ import { sampleFlights } from '../../utils/flightData';
 import { Flight } from '../../types/Flight';
 import { getCachedFlights, cacheFlights } from '../../utils/flightCache';
 import { generateFlights } from '../../utils/flightGenerator';
-import { useCurrency } from '@/app/contexts/CurrencyContext';
+import { useCurrency } from '../../contexts/CurrencyContext';
 import CurrencySelector from '@/app/components/CurrencySelector';
 import Image from 'next/image';
 import { FaPlane, FaExchangeAlt, FaSuitcase, FaWifi, FaUtensils, FaTicketAlt } from 'react-icons/fa';

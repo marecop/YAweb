@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { RegisterParams } from '@/app/lib/auth';
-import { useAuth } from '@/app/contexts/AuthContext';
+import { useAuth } from '../../contexts/AuthContext';
 
 export default function RegisterPage() {
   const router = useRouter();

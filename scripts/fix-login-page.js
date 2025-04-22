@@ -159,9 +159,39 @@ if (!fs.existsSync(loginPageDir)) {
   console.log('已創建目錄: app/auth/login');
 }
 
-// 寫入正確的文件內容
-fs.writeFileSync(loginPagePath, correctLoginPageContent);
-console.log('已創建/更新登入頁面，修復了可能的語法錯誤');
+// 先檢查是否存在問題
+if (fs.existsSync(loginPagePath)) {
+  const currentContent = fs.readFileSync(loginPagePath, 'utf8');
+  
+  // 檢查是否有語法錯誤 (多個冒號)
+  if (currentContent.includes('isLoading: isLoading:')) {
+    console.log('檢測到雙冒號問題，將修復 isLoading: isLoading: 錯誤');
+  }
+  
+  // 檢查是否已經是正確的內容
+  if (currentContent.includes('const { login, isLoading: loading, error, clearError } = useAuth();')) {
+    console.log('登入頁面語法看起來已經正確');
+  } else {
+    console.log('登入頁面需要更新');
+  }
+}
+
+// 無論如何，都直接覆蓋整個文件，確保沒有錯誤
+try {
+  fs.writeFileSync(loginPagePath, correctLoginPageContent, { encoding: 'utf8', flag: 'w' });
+  console.log('已完全重寫登入頁面，確保沒有語法錯誤');
+  
+  // 檢查寫入後的內容
+  const afterContent = fs.readFileSync(loginPagePath, 'utf8');
+  const correctLine = 'const { login, isLoading: loading, error, clearError } = useAuth();';
+  if (afterContent.includes(correctLine)) {
+    console.log('確認: 登入頁面已包含正確的 isLoading: loading 語法');
+  } else {
+    console.error('警告: 登入頁面內容驗證失敗');
+  }
+} catch (err) {
+  console.error('寫入登入頁面時發生錯誤:', err);
+}
 
 // 還要檢查 AuthContext.tsx，確保它的 contextValue 是正確的
 const authContextPath = path.join(process.cwd(), 'app', 'contexts', 'AuthContext.tsx');
@@ -172,13 +202,25 @@ if (fs.existsSync(authContextPath)) {
   // 修改 contextValue 中的 loading 屬性名稱
   if (authContextContent.includes('const contextValue: AuthContextType = {') && 
       authContextContent.includes('loading,')) {
+    console.log('發現 contextValue 中使用了 loading，需要修改為 isLoading: loading');
+    
     authContextContent = authContextContent.replace(
       /loading,/g,
       'isLoading: loading,'
     );
     
-    fs.writeFileSync(authContextPath, authContextContent);
+    fs.writeFileSync(authContextPath, authContextContent, { encoding: 'utf8', flag: 'w' });
     console.log('已更新 AuthContext.tsx 中的 contextValue');
+    
+    // 檢查修改後的內容
+    const afterAuthContent = fs.readFileSync(authContextPath, 'utf8');
+    if (afterAuthContent.includes('isLoading: loading,')) {
+      console.log('確認: AuthContext 已更新為 isLoading: loading');
+    } else {
+      console.error('警告: AuthContext 內容驗證失敗');
+    }
+  } else if (authContextContent.includes('isLoading: loading,')) {
+    console.log('AuthContext.tsx 中的 contextValue 已經正確設定為 isLoading: loading');
   }
 }
 

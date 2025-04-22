@@ -4,11 +4,11 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useRef, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { useAuth } from '@/app/contexts/AuthContext';
+import { useAuth } from '../../contexts/AuthContext';
 import CurrencySelector from './CurrencySelector';
 import { FaUser, FaSignInAlt, FaUserPlus, FaSignOutAlt } from 'react-icons/fa';
-import { getMemberLevelName, getMemberLevelColorClass } from '@/app/utils/memberUtils';
-import { useCurrency } from '@/app/contexts/CurrencyContext';
+import { getMemberLevelName, getMemberLevelColorClass } from '../utils/memberUtils';
+import { useCurrency } from '../../contexts/CurrencyContext';
 import { User } from '@/app/lib/auth';
 
 export default function Header() {

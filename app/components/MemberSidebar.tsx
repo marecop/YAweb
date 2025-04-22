@@ -12,7 +12,7 @@ import {
   FaCog, 
   FaBell 
 } from 'react-icons/fa';
-import { useAuth } from '@/app/contexts/AuthContext';
+import { useAuth } from '../../contexts/AuthContext';
 
 // 側邊欄項目接口
 interface SidebarItem {

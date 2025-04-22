@@ -4,9 +4,9 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { zhTW } from 'date-fns/locale';
-import { useAuth } from '@/app/contexts/AuthContext';
-import { getBookingsByUserId, cancelBooking, Booking } from '@/utils/bookingService';
-import { useCurrency } from '@/app/contexts/CurrencyContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { getBookingsByUserId, cancelBooking, Booking } from '../../utils/bookingService';
+import { useCurrency } from '../../contexts/CurrencyContext';
 
 export default function BookingsPage() {
   const router = useRouter();
