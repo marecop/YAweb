@@ -152,7 +152,7 @@ export async function POST(
     // 更新用戶資料
     const updatedUser = await updateUser(params.userId, {
       totalMiles: newTotalMiles,
-      memberLevel: newMemberLevel
+      memberLevel: newMemberLevel as any
     });
     
     return NextResponse.json({
@@ -249,7 +249,7 @@ export async function PATCH(
         const newMemberLevel = calculateMemberLevel(totalMiles);
         await updateUser(params.userId, {
           totalMiles,
-          memberLevel: newMemberLevel
+          memberLevel: newMemberLevel as any
         });
       }
     }

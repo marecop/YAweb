@@ -186,7 +186,7 @@ export async function POST(request: NextRequest) {
       // 更新用戶數據
       updateUser(userId, {
         totalMiles: newTotalMiles,
-        memberLevel
+        memberLevel: memberLevel as any // 使用類型斷言來解決類型不匹配問題
       });
     }
     
