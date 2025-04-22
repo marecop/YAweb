@@ -5,7 +5,7 @@
   "main": "server.js",
   "scripts": {
     "dev": "next dev",
-    "prebuild": "node scripts/render-build.js && node scripts/fix-directory.js && node scripts/fix-specific-files.js && node scripts/fix-memberUtils.js && node scripts/fix-header.js && node scripts/clean-auth-routes.js && node scripts/fix-verify-user.js && node scripts/fix-member-utils.js && node scripts/fix-login-page.js && node scripts/fix-auth-context.js && node scripts/fix-duplicate-isloading.js",
+    "prebuild": "node scripts/render-build.js && node scripts/fix-directory.js && node scripts/fix-specific-files.js && node scripts/fix-memberUtils.js && node scripts/fix-header.js && node scripts/clean-auth-routes.js && node scripts/fix-verify-user.js && node scripts/fix-member-utils.js && node scripts/fix-login-page.js && node scripts/fix-auth-context.js && node scripts/fix-duplicate-isloading.js && node scripts/fix-member-level.js",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
@@ -18,7 +18,8 @@
     "fix-member-utils": "node scripts/fix-member-utils.js",
     "fix-login-page": "node scripts/fix-login-page.js",
     "fix-auth-context": "node scripts/fix-auth-context.js",
-    "fix-duplicate-isloading": "node scripts/fix-duplicate-isloading.js"
+    "fix-duplicate-isloading": "node scripts/fix-duplicate-isloading.js",
+    "fix-member-level": "node scripts/fix-member-level.js"
   },
   "keywords": [
     "airline",
