@@ -10,6 +10,46 @@ if (fs.existsSync(authContextPath)) {
   console.log('檢查 AuthContext.tsx...');
   let authContextContent = fs.readFileSync(authContextPath, 'utf8');
   
+  // 檢查 AuthContextType 是否包含 clearError
+  if (authContextContent.includes('export interface AuthContextType') && 
+      !authContextContent.includes('clearError: () => void')) {
+    console.log('在 AuthContextType 中添加 clearError 方法');
+    authContextContent = authContextContent.replace(
+      /export interface AuthContextType {[\s\S]*?}/,
+      (match) => {
+        return match.replace(
+          /}$/,
+          '  clearError: () => void;\n}'
+        );
+      }
+    );
+  }
+  
+  // 檢查 clearError 函數是否定義
+  if (!authContextContent.includes('const clearError = () => {')) {
+    console.log('添加 clearError 函數定義');
+    authContextContent = authContextContent.replace(
+      /export function AuthProvider\(\{ children \}: AuthProviderProps\) {/,
+      'export function AuthProvider({ children }: AuthProviderProps) {\n  const [isLoggedIn, setIsLoggedIn] = useState(false);\n  const [user, setUser] = useState<User | null>(null);\n  const [loading, setLoading] = useState(true);\n  const [error, setError] = useState<string | null>(null);\n\n  // 清除錯誤信息\n  const clearError = () => {\n    setError(null);\n  };'
+    );
+  }
+  
+  // 檢查 contextValue 是否包含 clearError
+  if (authContextContent.includes('const contextValue') && 
+      !authContextContent.includes('clearError,') && 
+      !authContextContent.includes('clearError:')) {
+    console.log('在 contextValue 中添加 clearError');
+    authContextContent = authContextContent.replace(
+      /const contextValue[^;]*?{[\s\S]*?};/,
+      (match) => {
+        return match.replace(
+          /};$/,
+          '  clearError,\n};'
+        );
+      }
+    );
+  }
+  
   // 將 AuthContextType 接口中的 loading 重命名為 isLoading
   if (authContextContent.includes('export interface AuthContextType') && 
       authContextContent.includes('loading: boolean;')) {

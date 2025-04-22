@@ -70,34 +70,44 @@ function fixAuthContextFile() {
 // 修復登入頁面
 function fixLoginPage() {
   const loginPagePath = path.join(process.cwd(), 'app/auth/login/page.tsx');
+  const authContextPath = path.join(process.cwd(), 'app/contexts/AuthContext.tsx');
   
   // 檢查文件是否存在
-  if (!fs.existsSync(loginPagePath)) {
-    console.error('找不到 login/page.tsx 文件');
+  if (!fs.existsSync(loginPagePath) || !fs.existsSync(authContextPath)) {
+    console.error('找不到必要的文件');
     return false;
   }
   
-  console.log('正在讀取 login/page.tsx...');
+  console.log('正在讀取相關文件...');
   
-  // 讀取文件內容
+  // 讀取 AuthContext 檢查是否有 clearError
+  const authContextContent = fs.readFileSync(authContextPath, 'utf8');
+  const hasClearError = authContextContent.includes('clearError: () => void') || authContextContent.includes('clearError,');
+
+  // 讀取登入頁面內容
   let content = fs.readFileSync(loginPagePath, 'utf8');
   const originalContent = content;
   
-  // 處理 clearError 不存在的情況
+  // 處理 clearError
   if (content.includes('clearError }') || content.includes('clearError,')) {
-    console.log('修改登入頁面中的 clearError 使用');
-    
-    // 先從解構賦值中移除 clearError
-    content = content.replace(
-      /const \{ login, isLoading: loading, error, clearError \} = useAuth\(\);/,
-      'const { login, isLoading: loading, error } = useAuth();'
-    );
-    
-    // 然後移除對 clearError 的調用
-    content = content.replace(
-      /clearError\(\);/g,
-      '// clearError removed'
-    );
+    // 只有當 AuthContext 中沒有 clearError 時才移除它
+    if (!hasClearError) {
+      console.log('由於 AuthContext 中缺少 clearError，修改登入頁面中的 clearError 使用');
+      
+      // 從解構賦值中移除 clearError
+      content = content.replace(
+        /const \{ login, isLoading: loading, error, clearError \} = useAuth\(\);/,
+        'const { login, isLoading: loading, error } = useAuth();'
+      );
+      
+      // 然後移除對 clearError 的調用
+      content = content.replace(
+        /clearError\(\);/g,
+        '// clearError removed'
+      );
+    } else {
+      console.log('AuthContext 中存在 clearError，保留登入頁面中的 clearError 使用');
+    }
   }
   
   // 如果內容已更改，保存文件
