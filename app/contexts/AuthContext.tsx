@@ -419,7 +419,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // 提供身份驗證上下文值
   const contextValue: AuthContextType = {
     isLoggedIn,
-    loading,
+    isLoading: loading,
     user,
     error,
     login: handleLogin,

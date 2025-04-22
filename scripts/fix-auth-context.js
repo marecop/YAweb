@@ -57,6 +57,15 @@ if (fs.existsSync(loginPagePath)) {
   console.log('檢查 login/page.tsx...');
   let loginPageContent = fs.readFileSync(loginPagePath, 'utf8');
   
+  // 修復可能的雙冒號問題
+  if (loginPageContent.includes('isLoading: isLoading:')) {
+    loginPageContent = loginPageContent.replace(
+      /isLoading: isLoading:/g,
+      'isLoading:'
+    );
+    console.log('修復了 login/page.tsx 中的雙冒號問題');
+  }
+  
   // 更新 loading 屬性引用
   if (loginPageContent.includes('loading,') && loginPageContent.includes('} = useAuth()')) {
     loginPageContent = loginPageContent.replace(
