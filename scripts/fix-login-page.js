@@ -29,10 +29,10 @@ export default function LoginPage() {
     console.log('嘗試登入:', email);
     
     try {
-      const success = await login(email, password);
-      console.log('登入結果:', success);
+      const loginResult = await login(email, password);
+      console.log('登入結果:', loginResult);
       
-      if (success) {
+      if (loginResult) {
         // 獲取重定向 URL（如果有）
         const urlParams = new URLSearchParams(window.location.search);
         const redirectUrl = urlParams.get('redirect') || '/member';
