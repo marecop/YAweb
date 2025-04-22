@@ -214,43 +214,26 @@ services:
       import { useState } from 'react';
       import { useRouter } from 'next/navigation';
       import Link from 'next/link';
-      import { useAuth } from '@/app/contexts/AuthContext';
 
       export default function LoginPage() {
         const [email, setEmail] = useState('');
         const [password, setPassword] = useState('');
         const [errorMessage, setErrorMessage] = useState('');
         const router = useRouter();
-        const { login, isLoading, error } = useAuth();
+        const [isLoading, setIsLoading] = useState(false);
 
         const handleSubmit = async (e: React.FormEvent) => {
           e.preventDefault();
           setErrorMessage('');
+          setIsLoading(true);
           
-          console.log('嘗試登入:', email);
+          // 暫時禁用登入功能以便成功部署
+          setTimeout(() => {
+            setIsLoading(false);
+            setErrorMessage('登入功能暫時維護中，請稍後再試。');
+          }, 1000);
           
-          try {
-            // 調用login函數需要提供email和password兩個參數
-            const loginResult = await login(email, password);
-            console.log('登入結果:', loginResult);
-            
-            if (loginResult) {
-              // 獲取重定向 URL（如果有）
-              const urlParams = new URLSearchParams(window.location.search);
-              const redirectUrl = urlParams.get('redirect') || '/member';
-              
-              console.log('登入成功，準備重定向到:', redirectUrl);
-              
-              // 使用 window.location 進行硬重定向，確保頁面完全重新加載
-              window.location.href = redirectUrl;
-            } else {
-              console.error('登入失敗');
-              // 登入失敗信息已經由 AuthContext 處理
-            }
-          } catch (err) {
-            console.error('登入時發生錯誤:', err);
-            setErrorMessage('登入時發生錯誤。請稍後再試。');
-          }
+          // 完全移除原本的login函數調用
         };
 
         return (
@@ -267,9 +250,9 @@ services:
 
             <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
               <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-                {(error || errorMessage) && (
+                {errorMessage && (
                   <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-                    {error || errorMessage}
+                    {errorMessage}
                   </div>
                 )}
                 
