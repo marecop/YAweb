@@ -1,70 +1,110 @@
 const fs = require('fs');
 const path = require('path');
 
-console.log('🔧 開始修復 memberUtils.js 文件...');
+console.log('開始修復會員工具文件...');
 
-// 確保 app/utils 目錄存在
-const appUtilsDir = path.join(__dirname, '../app/utils');
-if (!fs.existsSync(appUtilsDir)) {
-  fs.mkdirSync(appUtilsDir, { recursive: true });
-  console.log(`   創建目錄: app/utils`);
+// memberUtils.ts 路徑
+const memberUtilsPath = path.join(process.cwd(), 'app', 'utils', 'memberUtils.ts');
+
+// 確保目錄存在
+if (!fs.existsSync(path.dirname(memberUtilsPath))) {
+  fs.mkdirSync(path.dirname(memberUtilsPath), { recursive: true });
+  console.log('已創建 utils 目錄');
 }
 
-// 創建 app/utils/memberUtils.js
-const memberUtilsJsPath = path.join(appUtilsDir, 'memberUtils.js');
-const memberUtilsJsContent = `
-export function getMemberLevelName(level) {
-  switch (Number(level)) {
-    case 1:
-      return '普通會員';
-    case 2:
-      return '銀卡會員';
-    case 3:
-      return '金卡會員';
-    case 4:
-      return '白金會員';
-    default:
-      return '未知會員等級';
-  }
-}
+// 創建或更新會員工具檔案
+const memberUtilsContent = `// 會員等級工具函數 - 可以在客戶端和服務器端共用
 
-export function getMemberLevelColorClass(level) {
-  switch (Number(level)) {
-    case 1:
-      return 'text-gray-500';
-    case 2:
-      return 'text-silver-500';
-    case 3:
-      return 'text-gold-500';
-    case 4:
-      return 'text-platinum-500';
-    default:
-      return 'text-gray-500';
-  }
-}
-`;
-
-fs.writeFileSync(memberUtilsJsPath, memberUtilsJsContent);
-console.log(`   ✅ 創建/更新文件: app/utils/memberUtils.js`);
-
-// 創建 app/utils/memberUtils.d.ts (TypeScript 定義文件)
-const memberUtilsDtsPath = path.join(appUtilsDir, 'memberUtils.d.ts');
-const memberUtilsDtsContent = `/**
- * 根據會員等級返回會員等級名稱
- * @param level 會員等級 (1-4)
- * @returns 會員等級名稱
- */
-export function getMemberLevelName(level: number | string): string;
+// 定義會員等級類型
+export type MemberLevel = 'Blue' | 'Silver' | 'Gold' | 'Platinum';
 
 /**
- * 根據會員等級返回會員等級顏色樣式類名
- * @param level 會員等級 (1-4)
- * @returns 顏色樣式類名
+ * 根據總里程自動計算會員等級
  */
-export function getMemberLevelColorClass(level: number | string): string;
-`;
+export function calculateMemberLevel(totalMiles: number): MemberLevel {
+  if (totalMiles >= 100000) {
+    return 'Platinum';
+  } else if (totalMiles >= 50000) {
+    return 'Gold';
+  } else if (totalMiles >= 25000) {
+    return 'Silver';
+  } else {
+    return 'Blue';
+  }
+}
 
-fs.writeFileSync(memberUtilsDtsPath, memberUtilsDtsContent);
-console.log(`   ✅ 創建/更新文件: app/utils/memberUtils.d.ts`);
+/**
+ * 獲取會員等級對應的中文名稱
+ */
+export function getMemberLevelName(level: string): string {
+  switch (level) {
+    case 'Platinum':
+      return '白金卡會員';
+    case 'Gold':
+      return '金卡會員';
+    case 'Silver':
+      return '銀卡會員';
+    default:
+      return '藍卡會員';
+  }
+}
 
-console.log('🎉 完成！已修復 memberUtils.js 文件並添加類型定義。'); 
+// 會員等級顏色映射
+interface MemberLevelColors {
+  [key: string]: string;
+  Platinum: string;
+  Gold: string;
+  Silver: string;
+  Blue: string;
+}
+
+export const memberLevelColors: MemberLevelColors = {
+  Platinum: 'bg-purple-600 text-white',
+  Gold: 'bg-yellow-500 text-white',
+  Silver: 'bg-gray-400 text-white',
+  Blue: 'bg-blue-200 text-gray-700'
+};
+
+// 獲取會員等級對應的顏色類名
+export function getMemberLevelColorClass(level: string): string {
+  return memberLevelColors[level] || memberLevelColors.Blue;
+}
+
+// 獲取會員等級對應的福利
+export const getMemberBenefits = (level: string): string[] => {
+  const benefits: Record<string, string[]> = {
+    Blue: ['免費托運行李 20kg', '線上優先辦理登機手續'],
+    Silver: ['免費托運行李 30kg', '優先登機', '機場貴賓室使用權 (每年 2 次)'],
+    Gold: ['免費托運行李 40kg', '優先登機', '機場貴賓室使用權 (無限次)', '免費選擇座位'],
+    Platinum: ['免費托運行李 50kg', '優先登機', '機場貴賓室使用權 (無限次)', '免費選擇座位', '免費升等艙位 (每年 2 次)']
+  };
+  
+  return benefits[level] || [];
+};`;
+
+fs.writeFileSync(memberUtilsPath, memberUtilsContent);
+console.log('已創建/更新 memberUtils.ts 檔案');
+
+// 檢查 app/api/miles/route.ts
+const milesRoutePath = path.join(process.cwd(), 'app', 'api', 'miles', 'route.ts');
+if (fs.existsSync(milesRoutePath)) {
+  let milesRouteContent = fs.readFileSync(milesRoutePath, 'utf8');
+  
+  // 確保正確導入 calculateMemberLevel
+  if (milesRouteContent.includes('import { calculateMemberLevel }')) {
+    console.log('app/api/miles/route.ts 已經正確導入 calculateMemberLevel');
+  } else {
+    // 尋找導入部分並添加 calculateMemberLevel
+    milesRouteContent = milesRouteContent.replace(
+      /import {([^}]*)}/,
+      'import {$1, calculateMemberLevel }'
+    );
+    
+    fs.writeFileSync(milesRoutePath, milesRouteContent);
+    console.log('已更新 app/api/miles/route.ts 的導入');
+  }
+} else {
+  console.log('找不到 app/api/miles/route.ts 檔案');
+}
+
+console.log('會員工具文件修復完成'); 
