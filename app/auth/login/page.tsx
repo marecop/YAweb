@@ -19,6 +19,7 @@ export default function LoginPage() {
     console.log('嘗試登入:', email);
     
     try {
+      // 調用login函數需要提供email和password兩個參數
       const loginResult = await login(email, password);
       console.log('登入結果:', loginResult);
       
