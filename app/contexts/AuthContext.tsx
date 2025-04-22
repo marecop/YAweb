@@ -6,7 +6,7 @@ import { checkAuth, login, register, logout, User, LoginParams, RegisterParams }
 // 身份驗證上下文狀態類型
 export interface AuthContextType {
   isLoggedIn: boolean;
-  loading: boolean;
+  isLoading: boolean;
   user: User | null;
   error: string | null;
   login: (email: string, password: string) => Promise<boolean>;
