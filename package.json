@@ -5,7 +5,7 @@
   "main": "server.js",
   "scripts": {
     "dev": "next dev",
-    "prebuild": "node scripts/render-build.js && node scripts/fix-directory.js && node scripts/fix-specific-files.js && node scripts/fix-memberUtils.js && node scripts/fix-header.js && node scripts/clean-auth-routes.js && node scripts/fix-verify-user.js && node scripts/fix-member-utils.js && node scripts/fix-duplicate-isloading.js && node scripts/fix-member-level.js && node scripts/fix-auth-types.js && node scripts/fix-login-boolean-return.js && node scripts/fix-login-return-type.js && node scripts/fix-login-page.js && node scripts/fix-clear-error.js && node scripts/fix-login-types.js && node scripts/fix-login-void-return.js",
+    "prebuild": "node scripts/render-build.js && node scripts/fix-directory.js && node scripts/fix-specific-files.js && node scripts/fix-memberUtils.js && node scripts/fix-header.js && node scripts/clean-auth-routes.js && node scripts/fix-verify-user.js && node scripts/fix-member-utils.js && node scripts/fix-duplicate-isloading.js && node scripts/fix-member-level.js && node scripts/fix-auth-types.js && node scripts/fix-login-boolean-return.js && node scripts/fix-login-return-type.js && node scripts/fix-login-page.js && node scripts/fix-clear-error.js && node scripts/fix-login-types.js && node scripts/fix-login-void-return.js && node scripts/fix-css-imports.js",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
@@ -24,7 +24,8 @@
     "fix-login-return-type": "node scripts/fix-login-return-type.js",
     "fix-login-boolean-return": "node scripts/fix-login-boolean-return.js",
     "fix-login-types": "node scripts/fix-login-types.js",
-    "fix-login-void-return": "node scripts/fix-login-void-return.js"
+    "fix-login-void-return": "node scripts/fix-login-void-return.js",
+    "fix-css-imports": "node scripts/fix-css-imports.js"
   },
   "keywords": [
     "airline",
