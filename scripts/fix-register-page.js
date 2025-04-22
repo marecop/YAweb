@@ -1,4 +1,17 @@
-'use client';
+/**
+ * 此腳本專門用於修復 register/page.tsx 文件
+ * 直接重寫整個文件，確保沒有語法錯誤
+ */
+
+const fs = require('fs');
+const path = require('path');
+
+console.log('開始重寫註冊頁面...');
+
+const registerPagePath = path.join(process.cwd(), 'app/auth/register/page.tsx');
+
+// 完整的正確版本的頁面代碼
+const correctPageContent = `'use client';
 
 import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
@@ -180,7 +193,7 @@ export default function RegisterPage() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-ya-yellow-600 hover:bg-ya-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ya-yellow-500 ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+                className={\`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-ya-yellow-600 hover:bg-ya-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ya-yellow-500 \${isLoading ? 'opacity-70 cursor-not-allowed' : ''}\`}
               >
                 {isLoading ? (
                   <>
@@ -198,4 +211,25 @@ export default function RegisterPage() {
       </div>
     </div>
   );
+}`;
+
+try {
+  // 確保目錄存在
+  const dir = path.dirname(registerPagePath);
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+    console.log(`創建目錄: ${dir}`);
+  }
+  
+  // 寫入新文件
+  fs.writeFileSync(registerPagePath, correctPageContent, 'utf8');
+  console.log('✅ 註冊頁面已重寫');
+  
+  // 顯示檢查文件內容
+  console.log('檢查文件是否存在:', fs.existsSync(registerPagePath));
+  console.log('檔案大小:', fs.statSync(registerPagePath).size, '字節');
+} catch (error) {
+  console.error('重寫註冊頁面時出錯:', error);
 }
+
+console.log('註冊頁面重寫完成！'); 
