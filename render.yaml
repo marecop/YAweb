@@ -5,6 +5,8 @@ services:
     plan: free
     buildCommand: |
       echo "執行緊急修復..."
+      # 清除緩存和先前的構建
+      rm -rf node_modules .next
       # 確保目錄存在
       mkdir -p app/auth/register
       mkdir -p app/auth/login
@@ -228,6 +230,7 @@ services:
           console.log('嘗試登入:', email);
           
           try {
+            // 調用login函數需要提供email和password兩個參數
             const loginResult = await login(email, password);
             console.log('登入結果:', loginResult);
             
@@ -344,9 +347,18 @@ services:
       }
       EOL
       
-      # 打印文件信息確認
-      echo "確認頁面已創建："
-      ls -la app/auth/register/page.tsx app/auth/login/page.tsx
+      # 檢查和輸出頁面內容以進行調試
+      echo "確認登入頁面已創建，並檢查其內容："
+      ls -la app/auth/login/page.tsx
+      cat app/auth/login/page.tsx | grep "login("
+      
+      # 特別緊急修復：找到所有包含 login($1) 的文件並修復
+      echo "進行額外的緊急修復，搜索並替換所有出現的 login(\\\$1) ..."
+      find . -type f -name "*.tsx" -o -name "*.jsx" -o -name "*.ts" -o -name "*.js" | xargs grep -l "login(\\\$1)" | xargs -I {} sed -i 's/login(\$1)/login(email, password)/g' {}
+      
+      # 打印查找結果
+      echo "確認修復結果："
+      find . -type f -name "*.tsx" -o -name "*.jsx" -o -name "*.ts" -o -name "*.js" | xargs grep -l "login("
       
       # 繼續原有構建流程，但簡化腳本執行
       echo "執行其餘必要的腳本..."
