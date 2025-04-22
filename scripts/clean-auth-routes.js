@@ -101,7 +101,7 @@ export async function POST(request: Request) {
       email,
       password, // 實際應用應加密儲存
       miles: 0,
-      level: 'Blue',
+      level: 'Blue' as 'Blue' | 'Silver' | 'Gold' | 'Platinum',
     };
 
     // 將新使用者加入模擬資料 (實際應用會存入資料庫)
@@ -170,7 +170,7 @@ export async function POST(request: Request) {
       email,
       password, // 實際應用應加密儲存
       miles: 0,
-      level: 'Blue',
+      level: 'Blue' as 'Blue' | 'Silver' | 'Gold' | 'Platinum',
     };
 
     // 將新使用者加入模擬資料 (實際應用會存入資料庫)
