@@ -42,6 +42,23 @@ function fixLoginPage() {
     );
   }
   
+  // 處理 clearError
+  if (content.includes('clearError }') || content.includes('clearError,')) {
+    console.log('找到 clearError 引用，移除它');
+    
+    // 從解構賦值中移除 clearError
+    content = content.replace(
+      /const \{ login, isLoading: loading, error, clearError \} = useAuth\(\);/,
+      'const { login, isLoading: loading, error } = useAuth();'
+    );
+    
+    // 然後移除對 clearError 的調用
+    content = content.replace(
+      /clearError\(\);/g,
+      '// clearError removed'
+    );
+  }
+  
   // 如果內容已更改，保存文件
   if (content !== originalContent) {
     console.log('修復 login/page.tsx 並保存...');

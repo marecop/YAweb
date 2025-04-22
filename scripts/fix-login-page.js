@@ -19,12 +19,11 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const router = useRouter();
-  const { login, isLoading: loading, error, clearError } = useAuth();
+  const { login, isLoading: loading, error } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage('');
-    clearError();
     
     console.log('嘗試登入:', email);
     
@@ -169,7 +168,7 @@ if (fs.existsSync(loginPagePath)) {
   }
   
   // 檢查是否已經是正確的內容
-  if (currentContent.includes('const { login, isLoading: loading, error, clearError } = useAuth();')) {
+  if (currentContent.includes('const { login, isLoading: loading, error } = useAuth();')) {
     console.log('登入頁面語法看起來已經正確');
   } else {
     console.log('登入頁面需要更新');
@@ -183,7 +182,7 @@ try {
   
   // 檢查寫入後的內容
   const afterContent = fs.readFileSync(loginPagePath, 'utf8');
-  const correctLine = 'const { login, isLoading: loading, error, clearError } = useAuth();';
+  const correctLine = 'const { login, isLoading: loading, error } = useAuth();';
   if (afterContent.includes(correctLine)) {
     console.log('確認: 登入頁面已包含正確的 isLoading: loading 語法');
   } else {
