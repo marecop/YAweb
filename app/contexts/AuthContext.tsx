@@ -29,7 +29,7 @@ interface AuthProviderProps {
 export function AuthProvider({ children }: AuthProviderProps) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastRefreshTime, setLastRefreshTime] = useState<number>(Date.now());
 
@@ -40,7 +40,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   // 檢查用戶是否已通過身份驗證
   const refreshAuth = async () => {
-    setLoading(true);
+    setIsLoading(true);
     try {
       const res = await fetch('/api/auth/check');
       if (res.ok) {
@@ -70,12 +70,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setIsLoggedIn(false);
       localStorage.removeItem('user');
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   // 使用useCallback包裝refreshAuth，避免不必要的函數重建
-  const memoizedRefreshAuth = React.useCallback(refreshAuth, [isLoggedIn, user, loading, error]);
+  const memoizedRefreshAuth = React.useCallback(refreshAuth, [isLoggedIn, user, isLoading, error]);
 
   // 初始檢查
   useEffect(() => {
@@ -85,7 +85,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (!isMounted) return;
       
       try {
-        setLoading(true);
+        setIsLoading(true);
         console.log('AuthContext: 初始化認證狀態');
         
         const authResponse = await checkAuth();
@@ -130,7 +130,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setError('初始身份驗證檢查失敗');
       } finally {
         if (isMounted) {
-          setLoading(false);
+          setIsLoading(false);
         }
       }
     };
@@ -217,7 +217,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   
   // 處理登入
   const handleLogin = async (email: string, password: string): Promise<boolean> => {
-    setLoading(true);
+    setIsLoading(true);
     setError(null);
     
     try {
@@ -241,7 +241,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         const errorMsg = data.error || '登入失敗，請檢查您的憑證';
         console.error('登入失敗:', errorMsg);
         setError(errorMsg);
-        setLoading(false);
+        setIsLoading(false);
         return false;
       }
       
@@ -268,18 +268,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
         // 更新最後刷新時間
         setLastRefreshTime(Date.now());
         
-        setLoading(false);
+        setIsLoading(false);
         return true;
       } else {
         console.error('登入響應中缺少用戶資料');
         setError('登入響應中缺少用戶資料');
-        setLoading(false);
+        setIsLoading(false);
         return false;
       }
     } catch (error) {
       console.error('登入處理過程中發生錯誤:', error);
       setError('登入過程中發生錯誤，請稍後再試');
-      setLoading(false);
+      setIsLoading(false);
       return false;
     }
   };
@@ -287,7 +287,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // 用戶註冊
   const handleRegister = async (userData: RegisterParams): Promise<any> => {
     try {
-      setLoading(true);
+      setIsLoading(true);
       
       // 調用 API 註冊
       const result = await register(userData);
@@ -323,14 +323,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
         error: '註冊過程中發生錯誤: ' + (error.message || '未知錯誤')
       };
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
   
   // 登出處理
   const handleLogout = async (): Promise<boolean> => {
     try {
-      setLoading(true);
+      setIsLoading(true);
       console.log('AuthContext: 嘗試登出');
       
       const response = await logout();
@@ -368,7 +368,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setError(error.message || '登出失敗，請稍後再試');
       return false;
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
   
@@ -419,7 +419,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // 提供身份驗證上下文值
   const contextValue: AuthContextType = {
     isLoggedIn,
-    isLoading: loading,
+    isLoading,
     user,
     error,
     login: handleLogin,
