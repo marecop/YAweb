@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { MdDashboard, MdPerson, MdFlight, MdCardMembership, MdAttachMoney, MdHistory } from 'react-icons/md';
+import { MdDashboard, MdPerson, MdFlight, MdCardMembership, MdAttachMoney, MdHistory, MdEventNote } from 'react-icons/md';
 
 export default function AdminDashboard() {
   const dashboardItems = [
@@ -36,6 +36,13 @@ export default function AdminDashboard() {
       description: '管理航班資訊和排程',
       link: '/admin/flights',
       color: 'bg-green-100'
+    },
+    {
+      title: '預訂管理',
+      icon: <MdEventNote className="h-8 w-8 text-purple-600" />,
+      description: '管理所有航班預訂和訂單',
+      link: '/admin/bookings',
+      color: 'bg-purple-100'
     }
   ];
 
@@ -48,7 +55,7 @@ export default function AdminDashboard() {
         </p>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {dashboardItems.map((item) => (
           <div key={item.title} className={`${item.color} p-6 rounded-lg shadow-sm`}>
             <Link href={item.link}>
