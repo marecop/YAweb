@@ -17,8 +17,8 @@ interface BookingDetailsPageProps {
 export default function BookingDetailsPage({ params }: BookingDetailsPageProps) {
   const { bookingId } = params;
   const router = useRouter();
-  const { isLoggedIn, user, loading: authLoading } = useAuth();
-  const [loading, setLoading] = useState(true);
+  const {isLoggedIn, user, loading} = useAuth();
+  const [pageLoading, setPageLoading] = useState(true);
   const [booking, setBooking] = useState<Booking | null>(null);
   const [error, setError] = useState<string | null>(null);
   const { formatPrice } = useCurrency();
@@ -28,10 +28,10 @@ export default function BookingDetailsPage({ params }: BookingDetailsPageProps) 
     if (typeof window === 'undefined') return;
     
     // 等待身份驗證完成
-    if (authLoading) return;
+    if (loading) return;
     
     // 如果未登錄，重定向到登錄頁面
-    if (!authLoading && !isLoggedIn) {
+    if (!loading && !isLoggedIn) {
       router.push(`/login?redirect=/bookings/${bookingId}`);
       return;
     }
@@ -39,11 +39,11 @@ export default function BookingDetailsPage({ params }: BookingDetailsPageProps) 
     const loadBookingDetails = async () => {
       if (!bookingId || !user) {
         setError('無效的請求');
-        setLoading(false);
+        setPageLoading(false);
         return;
       }
       
-      setLoading(true);
+      setPageLoading(true);
       try {
         const bookingData = getBookingById(bookingId);
         
@@ -68,12 +68,12 @@ export default function BookingDetailsPage({ params }: BookingDetailsPageProps) 
         setError('加載預訂詳情時出錯');
         setBooking(null);
       } finally {
-        setLoading(false);
+        setPageLoading(false);
       }
     };
 
     loadBookingDetails();
-  }, [bookingId, authLoading, isLoggedIn, user, router]);
+  }, [bookingId, loading, isLoggedIn, user, router]);
 
   // 處理取消預訂
   const handleCancelBooking = () => {
@@ -122,7 +122,7 @@ export default function BookingDetailsPage({ params }: BookingDetailsPageProps) 
   };
 
   // 如果認證正在加載，顯示加載中
-  if (authLoading) {
+  if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-ya-yellow-500"></div>
@@ -150,7 +150,7 @@ export default function BookingDetailsPage({ params }: BookingDetailsPageProps) 
   }
 
   // 如果正在加載，顯示加載中
-  if (loading) {
+  if (pageLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-ya-yellow-500"></div>

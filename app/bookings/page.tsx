@@ -3,24 +3,24 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Booking, getBookingsByUserId } from '@/utils/bookingService';
-import { useAuth } from '@/app/contexts/AuthContext';
-import { useCurrency } from '@/app/contexts/CurrencyContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { useCurrency } from '../../contexts/CurrencyContext';
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { zhTW } from 'date-fns/locale';
 
 export default function BookingsPage() { const router = useRouter();
-  const {isLoggedIn, user, isLoading: authLoading} = useAuth();
+  const {isLoggedIn, user, loading} = useAuth();
   const [isLoading, setLoading] = useState(true);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const { formatPrice } = useCurrency();
 
   useEffect(() => {
     // 等待身份驗證完成
-    if (authLoading) return;
+    if (loading) return;
     
     // 如果未登錄，重定向到登錄頁面
-    if (!authLoading && !isLoggedIn) {
+    if (!loading && !isLoggedIn) {
       router.push('/auth/login?redirect=/bookings');
       return;
     }
@@ -44,7 +44,7 @@ export default function BookingsPage() { const router = useRouter();
     };
     
     loadBookings();
-  }, [authLoading, isLoggedIn, user, router]);
+  }, [loading, isLoggedIn, user, router]);
 
   // 格式化日期
   const formatDate = (dateString: string) => {
@@ -71,7 +71,7 @@ export default function BookingsPage() { const router = useRouter();
   };
 
   // 如果身份驗證正在加載，顯示加載中
-  if (authLoading) {
+  if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-ya-yellow-500"></div>
