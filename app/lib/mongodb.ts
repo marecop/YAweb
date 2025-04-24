@@ -9,7 +9,7 @@ interface MongooseConnection {
 
 // MongoDB 連接字符串，從環境變量獲取
 // 在生產環境中，應該在 Render 平台上設置這個環境變量
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://youruser:yourpassword@cluster0.mongodb.net/yellairlines?retryWrites=true&w=majority';
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://yelluser:yell2024pass@cluster0.atvupvb.mongodb.net/yellairlines?retryWrites=true&w=majority';
 
 // 創建具有正確類型的全局變量
 let globalMongoose: MongooseConnection = (global as any).mongoose || { conn: null, promise: null, isMock: false };
@@ -89,4 +89,18 @@ export function isUsingMockConnection() {
   return globalMongoose.isMock;
 }
 
+
+// 環境變數檢查和配置
+export function getMongoDBConfig() {
+  const isProduction = process.env.NODE_ENV === 'production';
+  const useMockDB = process.env.USE_MOCK_DB === 'true';
+  const mongodbUri = process.env.MONGODB_URI || 'mongodb+srv://yelluser:yell2024pass@cluster0.atvupvb.mongodb.net/yellairlines?retryWrites=true&w=majority';
+  
+  return {
+    isProduction,
+    useMockDB,
+    mongodbUri,
+    shouldUseMockDB: useMockDB || !mongodbUri.includes('mongodb')
+  };
+}
 export default connectToDatabase; 

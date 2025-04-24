@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { RegisterParams } from '@/app/lib/auth';
-import { useAuth } from '@/app/contexts/AuthContext';
+import { useAuth } from '../../contexts/AuthContext';
 
 export default function MemberRegisterPage() {
   const router = useRouter();
@@ -25,7 +25,7 @@ export default function MemberRegisterPage() {
     general?: string;
   }>({});
   const [agreeToTerms, setAgreeToTerms] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [loading, setIsLoading] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
   const [showPrivacy, setShowPrivacy] = useState(false);
 
@@ -288,12 +288,11 @@ export default function MemberRegisterPage() {
             <div>
               <button
                 type="submit"
-                disabled={isLoading}
-                className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-ya-yellow-600 hover:bg-ya-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ya-yellow-500 ${
-                  isLoading ? 'opacity-70 cursor-not-allowed' : ''
+                disabled={loading}
+                className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-ya-yellow-600 hover:bg-ya-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ya-yellow-500 ${ loading ? 'opacity-70 cursor-not-allowed' : ''
                 }`}
               >
-                {isLoading ? (
+                { loading ? (
                   <span className="flex items-center">
                     <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>

@@ -1,0 +1,154 @@
+const fs = require('fs');
+const path = require('path');
+
+// 要處理的文件路徑
+const filesToCheck = [
+  'app/bookings/[bookingId]/page.tsx',
+  'app/contexts/AuthContext.tsx',
+  'app/auth/login/page.tsx',
+  'app/auth/register/page.tsx',
+  'app/bookings/page.tsx'
+];
+
+// 遞迴尋找所有.tsx和.ts文件
+function findTsFiles(dir, fileList = []) {
+  const files = fs.readdirSync(dir);
+  
+  files.forEach(file => {
+    const filePath = path.join(dir, file);
+    if (fs.statSync(filePath).isDirectory() && !filePath.includes('node_modules') && !filePath.includes('.next')) {
+      fileList = findTsFiles(filePath, fileList);
+    } else if ((file.endsWith('.tsx') || file.endsWith('.ts')) && !file.includes('.d.ts')) {
+      fileList.push(filePath);
+    }
+  });
+  
+  return fileList;
+}
+
+// 修復 AuthContext.tsx 文件
+function fixAuthContext() {
+  const filePath = 'app/contexts/AuthContext.tsx';
+  if (!fs.existsSync(filePath)) {
+    console.error(`文件不存在: ${filePath}`);
+    return;
+  }
+
+  let content = fs.readFileSync(filePath, 'utf8');
+  
+  // 修改 AuthContextType 介面
+  content = content.replace(
+    /interface\s+AuthContextType\s*{[^}]*isLoading:\s*boolean;/g, 
+    match => match.replace('isLoading: boolean;', 'loading: boolean;')
+  );
+  
+  // 修改狀態變數宣告
+  content = content.replace(
+    /const\s+\[\s*isLoading\s*,\s*setIsLoading\s*\]\s*=\s*useState/g, 
+    'const [loading, setLoading] = useState'
+  );
+  
+  // 修改 setIsLoading 調用
+  content = content.replace(/setIsLoading\(/g, 'setLoading(');
+  
+  // 修改 contextValue 中的 isLoading
+  content = content.replace(
+    /value\s*=\s*{[^}]*isLoading[^,}]*/g, 
+    match => match.replace('isLoading', 'loading')
+  );
+  
+  fs.writeFileSync(filePath, content, 'utf8');
+  console.log(`已修復 ${filePath}`);
+}
+
+// 修復指定文件中的 isLoading 變數
+function fixLoadingVariable(filePath) {
+  if (!fs.existsSync(filePath)) {
+    console.error(`文件不存在: ${filePath}`);
+    return;
+  }
+
+  console.log(`正在處理文件: ${filePath}`);
+  let content = fs.readFileSync(filePath, 'utf8');
+  let originalContent = content;
+  
+  // 修改從 useAuth 解構的 isLoading 變數
+  content = content.replace(
+    /const\s*{([^}]*)isLoading([^}]*?)}\s*=\s*useAuth\(\)/g, 
+    'const {$1loading$2} = useAuth()'
+  );
+  
+  // 修改大寫的 Loading 變數
+  content = content.replace(
+    /const\s*{([^}]*)Loading([^}]*?)}\s*=\s*useAuth\(\)/g, 
+    'const {$1loading$2} = useAuth()'
+  );
+  
+  // 修改 if (isLoading) 條件判斷
+  content = content.replace(/if\s*\(\s*isLoading\s*\)/g, 'if (loading)');
+  
+  // 修改 if (!isLoading) 條件判斷
+  content = content.replace(/if\s*\(\s*!\s*isLoading/g, 'if (!loading');
+  
+  // 修改大寫的 Loading 變數條件判斷
+  content = content.replace(/if\s*\(\s*Loading\s*\)/g, 'if (loading)');
+  content = content.replace(/if\s*\(\s*!\s*Loading/g, 'if (!loading');
+  
+  // 修改 useEffect 依賴數組中的 isLoading
+  content = content.replace(
+    /\[\s*([^,\]]*),\s*isLoading\s*,\s*([^\]]*)\]/g, 
+    '[$1, loading, $2]'
+  );
+  
+  // 修改 useEffect 依賴數組中的 Loading
+  content = content.replace(
+    /\[\s*([^,\]]*),\s*Loading\s*,\s*([^\]]*)\]/g, 
+    '[$1, loading, $2]'
+  );
+  
+  // 修改 isLoading || 其他條件
+  content = content.replace(/isLoading\s*\|\|\s*/g, 'loading || ');
+  
+  // 修改 Loading || 其他條件
+  content = content.replace(/Loading\s*\|\|\s*/g, 'loading || ');
+  
+  // 如果內容有變化，才寫回文件
+  if (content !== originalContent) {
+    fs.writeFileSync(filePath, content, 'utf8');
+    console.log(`已修復 ${filePath}`);
+    return true;
+  } else {
+    console.log(`文件 ${filePath} 無需修改`);
+    return false;
+  }
+}
+
+// 主函數
+function main() {
+  console.log('開始修復 loading 變數名稱...');
+  
+  // 優先修復 AuthContext
+  fixAuthContext();
+  
+  // 修復指定的關鍵文件
+  for (const file of filesToCheck) {
+    fixLoadingVariable(file);
+  }
+  
+  // 查找並修復其他所有 .tsx 和 .ts 文件
+  const allTsFiles = findTsFiles('app');
+  let fixedCount = 0;
+  
+  for (const file of allTsFiles) {
+    if (filesToCheck.includes(file)) continue; // 跳過已處理的文件
+    
+    if (fixLoadingVariable(file)) {
+      fixedCount++;
+    }
+  }
+  
+  console.log(`完成！共修復了 ${fixedCount + filesToCheck.length} 個文件。`);
+}
+
+// 執行主函數
+main(); 

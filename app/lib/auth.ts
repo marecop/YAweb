@@ -1,5 +1,11 @@
+// 引入用戶類型
+import type { User } from '../types';
+
+// 導出 User 類型以便其他文件使用
+export type { User };
+
 // 用戶介面定義
-export type User = {
+export type UserData = {
   id: string;
   firstName?: string;
   lastName?: string;
@@ -174,7 +180,7 @@ export async function login(params: LoginParams): Promise<AuthResponse> {
 }
 
 // 用戶註冊
-export async function register(params: RegisterParams): Promise<AuthResponse> {
+export async function register(firstName: string, lastName: string, email: string, password: string): Promise<AuthResponse> {
   try {
     console.log('發送註冊請求');
     
@@ -187,7 +193,7 @@ export async function register(params: RegisterParams): Promise<AuthResponse> {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(params),
+      body: JSON.stringify({ firstName, lastName, email, password }),
       credentials: 'include', // 包含 cookies
       signal: controller.signal
     });
@@ -250,45 +256,27 @@ export async function logout(): Promise<AuthResponse> {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
-        'Cache-Control': 'no-cache', // 避免緩存問題
       },
       credentials: 'include', // 包含 cookies
-      signal: controller.signal,
-      cache: 'no-store' // 確保獲取最新數據
+      signal: controller.signal
     });
     
     clearTimeout(timeoutId);
     
-    console.log('登出響應狀態:', response.status);
+    console.log('登出請求完成', response.status);
     
     if (!response.ok) {
-      throw new Error('登出失敗: ' + response.status);
+      const data = await response.json();
+      throw new Error(data.error || '登出過程中出錯');
     }
     
-    const data = await response.json();
-    console.log('登出響應:', data);
-    
-    // 清除任何本地存儲的身份驗證數據
-    if (typeof window !== 'undefined') {
-      // 清除localStorage中可能存在的認證信息（如果有的話）
-      try {
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('userInfo');
-        sessionStorage.removeItem('authToken');
-        sessionStorage.removeItem('userInfo');
-      } catch (e) {
-        console.error('清除本地存儲時出錯:', e);
-      }
-    }
-    
+    // 登出成功
     return {
       authenticated: false,
-      success: data.success,
-      error: data.error,
-      localStorage: data.localStorage || {
+      localStorage: {
         key: "userSession",
         value: "",
-        remove: "userSession"
+        remove: "true"
       }
     };
   } catch (error: any) {
@@ -296,29 +284,25 @@ export async function logout(): Promise<AuthResponse> {
     
     // 檢查是否為超時錯誤
     if (error.name === 'AbortError') {
-      const emptyLocalStorage = {
-        key: "userSession",
-        value: "",
-        remove: "userSession"
-      };
-      return {
-        authenticated: false,
-        success: false,
-        error: '登出請求超時',
-        localStorage: emptyLocalStorage
+      return { 
+        authenticated: false, 
+        error: '登出請求超時', 
+        localStorage: {
+          key: "userSession",
+          value: "",
+          remove: "true"
+        }
       };
     }
     
-    const emptyLocalStorage = {
-      key: "userSession",
-      value: "",
-      remove: "userSession"
-    };
-    return {
-      authenticated: false,
-      success: false,
-      error: '登出失敗: ' + (error.message || '未知錯誤'),
-      localStorage: emptyLocalStorage
+    return { 
+      authenticated: false, 
+      error: '登出過程中發生錯誤: ' + (error.message || '未知錯誤'),
+      localStorage: {
+        key: "userSession",
+        value: "",
+        remove: "true"
+      }
     };
   }
 }
@@ -329,23 +313,30 @@ export async function updateUserProfile(
   userData: Partial<Omit<User, 'id' | 'email' | 'password'>>
 ): Promise<{ success: boolean; user?: User; error?: string }> {
   try {
-    const response = await fetch('/api/auth/update-profile', {
-      method: 'PUT',
+    const response = await fetch(`/api/users/${userId}`, {
+      method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ userId, ...userData }),
+      body: JSON.stringify(userData),
+      credentials: 'include',
     });
 
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.error || '更新用戶資料失敗');
+      throw new Error(data.error || '更新個人資料時出錯');
     }
 
-    return { success: true, user: data.user };
-  } catch (error) {
-    console.error('更新用戶資料時出錯:', error);
-    return { success: false, error: error instanceof Error ? error.message : '未知錯誤' };
+    return {
+      success: true,
+      user: data.user,
+    };
+  } catch (error: any) {
+    console.error('更新個人資料失敗:', error);
+    return {
+      success: false,
+      error: '更新個人資料時出錯: ' + (error.message || '未知錯誤'),
+    };
   }
 } 

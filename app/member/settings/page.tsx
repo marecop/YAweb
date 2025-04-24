@@ -3,12 +3,12 @@
 import { useState, useEffect, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useAuth } from '@/app/contexts/AuthContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { FaChevronLeft, FaSave, FaUser } from 'react-icons/fa';
 
 export default function SettingsPage() {
   const router = useRouter();
-  const { isLoggedIn, user, loading } = useAuth();
+  const {isLoggedIn, user, loading} = useAuth();
   const [formLoading, setFormLoading] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [formError, setFormError] = useState('');

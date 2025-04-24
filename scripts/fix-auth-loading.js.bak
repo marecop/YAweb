@@ -1,0 +1,132 @@
+const fs = require('fs');
+const path = require('path');
+
+// 定義需要檢查/修復的文件路徑
+const filesToFix = [
+  'app/contexts/AuthContext.tsx',
+  'app/components/Header.tsx',
+  'app/bookings/page.tsx',
+  'app/bookings/[bookingId]/page.tsx',
+  'app/types/user.d.ts'
+];
+
+// 主函數
+async function fixAuthContextIssues() {
+  console.log('開始修復 AuthContext 中的 isLoading 屬性問題...');
+  
+  // 首先檢查 AuthContext.tsx 文件
+  const authContextPath = path.join(process.cwd(), 'app/contexts/AuthContext.tsx');
+  
+  if (!fs.existsSync(authContextPath)) {
+    console.error('無法找到 AuthContext.tsx 文件');
+    return;
+  }
+  
+  let authContextContent = fs.readFileSync(authContextPath, 'utf8');
+  let needsUpdate = false;
+  
+  // 檢查 isLoading 屬性是否在 AuthContextType 接口中定義
+  if (!authContextContent.includes('isLoading: boolean')) {
+    // 修改 AuthContextType 接口中的屬性
+    console.log('更新 AuthContextType 接口中的 isLoading 屬性...');
+    
+    authContextContent = authContextContent.replace(
+      /export\s+interface\s+AuthContextType\s*{([^}]*)}/s,
+      (match, content) => {
+        if (!content.includes('isLoading:')) {
+          return `export interface AuthContextType {${content}  isLoading: boolean;\n}`;
+        }
+        return match;
+      }
+    );
+    
+    needsUpdate = true;
+  }
+  
+  // 檢查 value 對象是否包含 isLoading 屬性
+  if (!authContextContent.includes('isLoading: isLoading') && 
+      !authContextContent.includes('isLoading,')) {
+    // 修改 value 對象
+    console.log('更新 value 對象中的 isLoading 屬性...');
+    
+    authContextContent = authContextContent.replace(
+      /const\s+value\s*(?::\s*AuthContextType)?\s*=\s*{([^}]*)}/s,
+      (match, content) => {
+        // 確保 isLoading 屬性存在
+        if (!content.includes('isLoading:') && !content.includes('isLoading,')) {
+          // 將 isLoading 添加到 value 對象中
+          return `const value: AuthContextType = {${content.includes('user,') ? content.replace('user,', 'user,\n    isLoading,') : content}  isLoading: isLoading,\n}`;
+        }
+        return match;
+      }
+    );
+    
+    needsUpdate = true;
+  }
+  
+  // 如果需要更新，寫回文件
+  if (needsUpdate) {
+    fs.writeFileSync(authContextPath, authContextContent, 'utf8');
+    console.log('✅ 已更新 AuthContext.tsx 文件');
+  } else {
+    console.log('AuthContext.tsx 文件不需要修改');
+  }
+  
+  // 修復 Header.tsx 文件
+  const headerPath = path.join(process.cwd(), 'app/components/Header.tsx');
+  
+  if (fs.existsSync(headerPath)) {
+    let headerContent = fs.readFileSync(headerPath, 'utf8');
+    
+    // 檢查 Header.tsx 是否使用了錯誤的屬性名
+    if (headerContent.includes('auth?.loading')) {
+      console.log('修復 Header.tsx 中的 loading 屬性引用...');
+      
+      // 將 auth?.loading 改為 auth?.isLoading
+      headerContent = headerContent.replace(/auth\?\.loading/g, 'auth?.isLoading');
+      
+      // 將解構賦值中的 loading 改為 isLoading
+      headerContent = headerContent.replace(
+        /const\s+{\s*([^}]*loading[^}]*)\s*}\s*=\s*useAuth\(\);/g,
+        (match, content) => {
+          return match.replace(/loading/, 'isLoading');
+        }
+      );
+      
+      fs.writeFileSync(headerPath, headerContent, 'utf8');
+      console.log('✅ 已修復 Header.tsx 文件');
+    } else {
+      console.log('Header.tsx 文件不需要修改');
+    }
+  }
+  
+  // 清理緩存並確保類型定義正確
+  try {
+    // 移除 .next 目錄以清理構建緩存
+    const nextDir = path.join(process.cwd(), '.next');
+    if (fs.existsSync(nextDir)) {
+      console.log('清理 .next 目錄...');
+      fs.rmSync(nextDir, { recursive: true, force: true });
+      console.log('✅ 已清理 .next 目錄');
+    }
+    
+    // 檢查 User 重複定義問題
+    const userDtsPath = path.join(process.cwd(), 'app/types/user.d.ts');
+    
+    if (fs.existsSync(userDtsPath)) {
+      console.log('檢查 user.d.ts 文件...');
+      
+      // 重命名 user.d.ts 為 user.d.ts.bak (暫時解決方案)
+      fs.renameSync(userDtsPath, `${userDtsPath}.bak`);
+      console.log('✅ 已備份 user.d.ts 文件');
+    }
+    
+  } catch (error) {
+    console.error('清理過程中發生錯誤:', error);
+  }
+  
+  console.log('修復完成。請嘗試重新構建項目。');
+}
+
+// 執行主函數
+fixAuthContextIssues().catch(console.error); 

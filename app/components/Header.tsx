@@ -7,14 +7,18 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '../../contexts/AuthContext';
 import CurrencySelector from './CurrencySelector';
 import { FaUser, FaSignInAlt, FaUserPlus, FaSignOutAlt } from 'react-icons/fa';
-import { getMemberLevelName, getMemberLevelColorClass } from '../utils/memberUtils';
+import { getMemberLevelName, getMemberLevelColorClass } from '../../utils/memberUtils';
 import { useCurrency } from '../../contexts/CurrencyContext';
 import { User } from '@/app/lib/auth';
 
 export default function Header() {
   const router = useRouter();
   const pathname = usePathname();
-  const { isLoggedIn, user, loading, logout } = useAuth();
+  const auth = useAuth();
+  const isLoggedIn = auth?.isLoggedIn;
+  const user = auth?.user;
+  const logout = auth?.logout;
+  const loading = auth?.loading;
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const [userMenuOpen, setUserMenuOpen] = useState(false);

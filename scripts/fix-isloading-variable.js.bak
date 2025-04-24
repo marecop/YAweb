@@ -1,0 +1,163 @@
+const fs = require('fs');
+const path = require('path');
+const { exec } = require('child_process');
+
+// 要搜尋的目錄
+const searchDir = path.join(process.cwd(), 'app');
+
+// 要忽略的目錄
+const ignoreDirs = [
+  'node_modules',
+  '.next',
+  '.git'
+];
+
+// 要處理的檔案類型
+const fileExtensions = ['.tsx', '.ts', '.jsx', '.js'];
+
+// 搜尋檔案中的 isLoading 並替換為 loading
+const fixIsLoadingVariable = (filePath) => {
+  try {
+    // 讀取檔案內容
+    const content = fs.readFileSync(filePath, 'utf8');
+    
+    // 檢查檔案是否包含 isLoading
+    if (!content.includes('isLoading')) {
+      return false;
+    }
+    
+    // 執行替換
+    // 1. 替換解構賦值 {isLoggedIn, user, isLoading} 為 {isLoggedIn, user, loading}
+    let updatedContent = content.replace(/{([^}]*?)isLoading([^}]*?)}/g, (match, before, after) => {
+      return `{${before}loading${after}}`;
+    });
+    
+    // 2. 替換條件判斷和其他使用 isLoading 的地方
+    updatedContent = updatedContent.replace(/\bisLoading\b/g, 'loading');
+    
+    // 只有當內容有變化時才寫入檔案
+    if (content !== updatedContent) {
+      fs.writeFileSync(filePath, updatedContent, 'utf8');
+      console.log(`已修復檔案: ${filePath}`);
+      return true;
+    }
+    
+    return false;
+  } catch (error) {
+    console.error(`處理檔案 ${filePath} 時出錯:`, error);
+    return false;
+  }
+};
+
+// 遞迴搜尋目錄
+const searchDirectory = (dir) => {
+  const results = {
+    scanned: 0,
+    fixed: 0
+  };
+  
+  const scanDir = (currentDir) => {
+    const items = fs.readdirSync(currentDir);
+    
+    for (const item of items) {
+      // 忽略特定目錄
+      if (ignoreDirs.includes(item)) {
+        continue;
+      }
+      
+      const itemPath = path.join(currentDir, item);
+      const stats = fs.statSync(itemPath);
+      
+      if (stats.isDirectory()) {
+        // 遞迴掃描子目錄
+        const subResults = scanDir(itemPath);
+        results.scanned += subResults.scanned;
+        results.fixed += subResults.fixed;
+      } else if (stats.isFile() && fileExtensions.includes(path.extname(itemPath))) {
+        // 處理符合條件的檔案
+        results.scanned++;
+        if (fixIsLoadingVariable(itemPath)) {
+          results.fixed++;
+        }
+      }
+    }
+    
+    return results;
+  };
+  
+  return scanDir(dir);
+};
+
+// 修復 AuthContext.tsx 中的特定變數定義
+const fixAuthContextFile = () => {
+  const authContextPath = path.join(searchDir, 'contexts', 'AuthContext.tsx');
+  
+  if (fs.existsSync(authContextPath)) {
+    try {
+      const content = fs.readFileSync(authContextPath, 'utf8');
+      
+      // 1. 修改介面定義
+      let updatedContent = content.replace(
+        /interface\s+AuthContextType\s+{[^}]*?isLoading:\s*boolean;/g,
+        (match) => match.replace('isLoading', 'loading')
+      );
+      
+      // 2. 修改狀態變數定義
+      updatedContent = updatedContent.replace(
+        /const\s+\[isLoading,\s*setIsLoading\]\s*=\s*useState/g, 
+        'const [loading, setLoading] = useState'
+      );
+      
+      // 3. 修改狀態設置函數
+      updatedContent = updatedContent.replace(/setIsLoading\(/g, 'setLoading(');
+      
+      // 4. 修改返回的上下文值
+      updatedContent = updatedContent.replace(
+        /const\s+value\s*=\s*{[^}]*?isLoading,/g,
+        (match) => match.replace('isLoading', 'loading')
+      );
+      
+      if (content !== updatedContent) {
+        fs.writeFileSync(authContextPath, updatedContent, 'utf8');
+        console.log(`已修復 AuthContext 檔案: ${authContextPath}`);
+        return true;
+      }
+    } catch (error) {
+      console.error(`處理 AuthContext 檔案時出錯:`, error);
+    }
+  }
+  
+  return false;
+};
+
+// 執行主函數
+const main = async () => {
+  console.log('開始修復 isLoading 變數問題...');
+  
+  // 先修復 AuthContext 檔案
+  const authContextFixed = fixAuthContextFile();
+  
+  // 然後掃描並修復其他檔案
+  const results = searchDirectory(searchDir);
+  
+  console.log(`掃描完成！共掃描了 ${results.scanned} 個檔案，修復了 ${results.fixed} 個檔案。`);
+  
+  // 嘗試重新建置專案
+  console.log('正在嘗試重新建置專案...');
+  exec('npm run build', (error, stdout, stderr) => {
+    if (error) {
+      console.error(`建置失敗: ${error.message}`);
+      return;
+    }
+    if (stderr) {
+      console.error(`建置警告: ${stderr}`);
+    }
+    console.log(`建置輸出: ${stdout}`);
+    console.log('建置完成！');
+  });
+};
+
+main().catch(error => {
+  console.error('執行腳本時發生錯誤:', error);
+  process.exit(1);
+}); 

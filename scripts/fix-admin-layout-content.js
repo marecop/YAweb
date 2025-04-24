@@ -1,8 +1,26 @@
-'use client';
+const fs = require('fs');
+const path = require('path');
+
+// 修復admin/layout.tsx文件中的AuthContext類型問題
+function fixAdminLayoutContent() {
+  try {
+    console.log('開始全面修復 admin/layout.tsx 文件...');
+    
+    // 1. 獲取文件路徑
+    const adminLayoutPath = path.join(process.cwd(), 'app/admin/layout.tsx');
+    
+    // 確保文件存在
+    if (!fs.existsSync(adminLayoutPath)) {
+      console.error('找不到 admin/layout.tsx 文件');
+      return;
+    }
+    
+    // 2. 完整替換文件內容
+    const newContent = `'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '@/app/contexts/AuthContext';
 import AdminSidebar from '../components/AdminSidebar';
 import Link from 'next/link';
 import { MdMenu, MdClose } from 'react-icons/md';
@@ -13,31 +31,26 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const auth = useAuth();
-  const isLoggedIn = auth.isLoggedIn;
-  const user = auth.user;
-  const loading = auth.loading;
-  const logout = auth.logout;
+  const { isLoggedIn, user, isLoading, logout } = useAuth();
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   useEffect(() => {
-    if (!loading) {
+    if (!isLoading) {
       if (!isLoggedIn) {
         // 未登入，重定向到登入頁
         router.push('/auth/login?redirect=/admin');
         return;
       }
 
-      // 通過電子郵件檢查管理員身份
-      if (user && user.email && user.email.includes('admin')) {
+      if (user && user.role === 'admin') {
         setIsAuthorized(true);
       } else {
         // 無權限，重定向到首頁
         router.push('/');
       }
     }
-  }, [loading, isLoggedIn, user, router]);
+  }, [isLoading, isLoggedIn, user, router]);
 
   const handleLogout = async () => {
     await logout();
@@ -45,7 +58,7 @@ export default function AdminLayout({
   };
 
   // 顯示加載中
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-100 pt-16">
         <div className="w-10 h-10 border-4 border-yellow-500 border-t-transparent rounded-full animate-spin"></div>
@@ -70,9 +83,9 @@ export default function AdminLayout({
 
       {/* 側邊欄 */}
       <div
-        className={`${
+        className={\`\${
           showMobileMenu ? 'fixed inset-0 z-30 top-16 pt-4' : 'hidden lg:block'
-        } lg:relative lg:top-0 w-64 bg-white shadow-xl`}
+        } lg:relative lg:top-0 w-64 bg-white shadow-xl\`}
       >
         <div className="flex flex-col h-full">
           <div className="py-6 px-4 bg-yellow-500 text-white">
@@ -104,3 +117,29 @@ export default function AdminLayout({
     </div>
   );
 }
+`;
+    
+    // 寫入新內容
+    fs.writeFileSync(adminLayoutPath, newContent);
+    console.log('✅ admin/layout.tsx 內容已完全替換');
+    
+    // 3. 清理建構快取以確保下次建構時使用最新的檔案
+    const nextCachePath = path.join(process.cwd(), '.next');
+    if (fs.existsSync(nextCachePath)) {
+      console.log('清理 .next 快取...');
+      try {
+        fs.rmSync(nextCachePath, { recursive: true, force: true });
+        console.log('✅ .next 快取已清理');
+      } catch (error) {
+        console.error('清理快取時發生錯誤:', error);
+      }
+    }
+    
+    console.log('全面修復完成');
+  } catch (error) {
+    console.error('修復過程中發生錯誤:', error);
+  }
+}
+
+// 執行修復
+fixAdminLayoutContent(); 

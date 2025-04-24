@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { FaAngleRight, FaAngleLeft, FaSpinner } from 'react-icons/fa';
 import Link from 'next/link';
-import { useAuth } from '@/app/contexts/AuthContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { getMemberLevelName, getMemberLevelColorClass } from '@/app/utils/memberUtils';
 
 // 格式化日期
@@ -49,7 +49,7 @@ interface MileageInfo {
 }
 
 export default function MilesPage() {
-  const { isLoggedIn, loading, user } = useAuth();
+  const {isLoggedIn, loading, user} = useAuth();
   const router = useRouter();
   
   // 狀態管理

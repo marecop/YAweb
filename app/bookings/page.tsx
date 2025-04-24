@@ -9,18 +9,19 @@ import Link from 'next/link';
 import { format } from 'date-fns';
 import { zhTW } from 'date-fns/locale';
 
-export default function BookingsPage() { const router = useRouter();
-  const {isLoggedIn, user, loading} = useAuth();
-  const [isLoading, setLoading] = useState(true);
+export default function BookingsPage() { 
+  const router = useRouter();
+  const {isLoggedIn, user, loading: authLoading} = useAuth();
+  const [Loading, setLoading] = useState(true);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const { formatPrice } = useCurrency();
 
   useEffect(() => {
     // 等待身份驗證完成
-    if (loading) return;
+    if (authLoading) return;
     
     // 如果未登錄，重定向到登錄頁面
-    if (!loading && !isLoggedIn) {
+    if (!authLoading && !isLoggedIn) {
       router.push('/auth/login?redirect=/bookings');
       return;
     }
@@ -44,7 +45,7 @@ export default function BookingsPage() { const router = useRouter();
     };
     
     loadBookings();
-  }, [loading, isLoggedIn, user, router]);
+  }, [authLoading, isLoggedIn, user, router]);
 
   // 格式化日期
   const formatDate = (dateString: string) => {
@@ -71,7 +72,7 @@ export default function BookingsPage() { const router = useRouter();
   };
 
   // 如果身份驗證正在加載，顯示加載中
-  if (loading) {
+  if (authLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-ya-yellow-500"></div>
@@ -102,7 +103,7 @@ export default function BookingsPage() { const router = useRouter();
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       <h1 className="text-3xl font-bold text-gray-900 mb-6">我的預訂</h1>
       
-      {isLoading ? (
+      {Loading ? (
         <div className="flex justify-center py-10">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-ya-yellow-500"></div>
           <span className="ml-3 text-lg text-gray-700">載入預訂中...</span>

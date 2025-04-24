@@ -4,12 +4,12 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useAuth } from '@/app/contexts/AuthContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { FaChevronLeft, FaPlane, FaHotel, FaCar, FaTicketAlt, FaUtensils, FaShoppingBag, FaSearch } from 'react-icons/fa';
 
 export default function RedemptionPage() {
   const router = useRouter();
-  const { isLoggedIn, user, loading } = useAuth();
+  const {isLoggedIn, user, loading} = useAuth();
   const [milesBalance, setMilesBalance] = useState(0);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');

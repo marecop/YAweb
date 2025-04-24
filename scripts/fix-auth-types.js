@@ -1,176 +1,101 @@
 const fs = require('fs');
 const path = require('path');
 
-console.log('開始修復 AuthContext 類型問題...');
-
-// 修復文件
-function fixAuthContextFile() {
-  const authContextPath = path.join(process.cwd(), 'app/contexts/AuthContext.tsx');
-  
-  // 檢查文件是否存在
-  if (!fs.existsSync(authContextPath)) {
-    console.error('找不到 AuthContext.tsx 文件');
-    return false;
-  }
-  
-  console.log('正在讀取 AuthContext.tsx...');
-  
-  // 讀取文件內容
-  let content = fs.readFileSync(authContextPath, 'utf8');
-  const originalContent = content;
-  
-  // 確保 AuthContextType 接口中有 clearError 方法
-  if (!content.includes('clearError: () => void')) {
-    console.log('在 AuthContextType 中添加 clearError 方法');
+// 修復AuthContext介面的isLoading屬性
+function fixAuthContextTypes() {
+  try {
+    console.log('開始修復 AuthContextType 介面和文件引用...');
     
-    // 在接口中添加 clearError 方法
-    content = content.replace(
-      /export interface AuthContextType {[\s\S]*?}/,
-      (match) => {
-        if (!match.includes('clearError:')) {
-          return match.replace(
-            /}$/,
-            '  clearError: () => void;\n}'
-          );
-        }
-        return match;
-      }
-    );
-  }
-  
-  // 確保 contextValue 中有 clearError
-  if (!content.includes('clearError,') && !content.includes('clearError:')) {
-    console.log('在 contextValue 中添加 clearError');
+    // 1. 更新AuthContextType介面確保包含isLoading
+    const authContextPath = path.join(process.cwd(), 'app/contexts/AuthContext.tsx');
+    let authContextContent = fs.readFileSync(authContextPath, 'utf8');
     
-    content = content.replace(
-      /const contextValue: AuthContextType = {[\s\S]*?};/,
-      (match) => {
-        if (!match.includes('clearError')) {
-          return match.replace(
-            /};$/,
-            '  clearError,\n};'
-          );
+    // 確保AuthContextType介面包含isLoading
+    if (!authContextContent.includes('isLoading: boolean;')) {
+      authContextContent = authContextContent.replace(
+        /export interface AuthContextType {([^}]*)}/,
+        (match, content) => {
+          if (!content.includes('isLoading')) {
+            return `export interface AuthContextType {${content}  isLoading: boolean;\n}`;
+          }
+          return match;
         }
-        return match;
-      }
-    );
-  }
-  
-  // 如果內容已更改，保存文件
-  if (content !== originalContent) {
-    console.log('修復 AuthContext.tsx 並保存...');
-    fs.writeFileSync(authContextPath, content, 'utf8');
-    return true;
-  } else {
-    console.log('AuthContext.tsx 沒有需要修復的問題');
-    return false;
-  }
-}
-
-// 修復登入頁面
-function fixLoginPage() {
-  const loginPagePath = path.join(process.cwd(), 'app/auth/login/page.tsx');
-  const authContextPath = path.join(process.cwd(), 'app/contexts/AuthContext.tsx');
-  
-  // 檢查文件是否存在
-  if (!fs.existsSync(loginPagePath) || !fs.existsSync(authContextPath)) {
-    console.error('找不到必要的文件');
-    return false;
-  }
-  
-  console.log('正在讀取相關文件...');
-  
-  // 讀取 AuthContext 檢查是否有 clearError
-  const authContextContent = fs.readFileSync(authContextPath, 'utf8');
-  const hasClearError = authContextContent.includes('clearError: () => void') || authContextContent.includes('clearError,');
-
-  // 讀取登入頁面內容
-  let content = fs.readFileSync(loginPagePath, 'utf8');
-  const originalContent = content;
-  
-  // 處理 clearError
-  if (content.includes('clearError }') || content.includes('clearError,')) {
-    // 只有當 AuthContext 中沒有 clearError 時才移除它
-    if (!hasClearError) {
-      console.log('由於 AuthContext 中缺少 clearError，修改登入頁面中的 clearError 使用');
-      
-      // 從解構賦值中移除 clearError
-      content = content.replace(
-        /const \{ login, isLoading: loading, error, clearError \} = useAuth\(\);/,
-        'const { login, isLoading: loading, error } = useAuth();'
       );
       
-      // 然後移除對 clearError 的調用
-      content = content.replace(
-        /clearError\(\);/g,
-        '// clearError removed'
-      );
+      fs.writeFileSync(authContextPath, authContextContent);
+      console.log('✅ 已更新 AuthContextType 介面包含 isLoading 屬性');
     } else {
-      console.log('AuthContext 中存在 clearError，保留登入頁面中的 clearError 使用');
+      console.log('ℹ️ AuthContextType 已包含 isLoading 屬性，無需修改');
     }
-  }
-  
-  // 如果內容已更改，保存文件
-  if (content !== originalContent) {
-    console.log('修復 login/page.tsx 並保存...');
-    fs.writeFileSync(loginPagePath, content, 'utf8');
-    return true;
-  } else {
-    console.log('login/page.tsx 沒有需要修復的問題');
-    return false;
+    
+    // 2. 尋找並修復所有使用loading的地方
+    const appDir = path.join(process.cwd(), 'app');
+    fixDirectoryFiles(appDir);
+    
+    console.log('✅ 所有文件修復完成');
+  } catch (error) {
+    console.error('修復過程中發生錯誤:', error);
   }
 }
 
-// 修復類型聲明文件或複製類型定義
-function ensureAuthContextTypeConsistency() {
-  // 檢查是否有單獨的類型定義文件
-  const typesPath = path.join(process.cwd(), 'app/types/auth.ts');
-  const contextPath = path.join(process.cwd(), 'app/contexts/AuthContext.tsx');
+// 遞迴處理目錄內的文件
+function fixDirectoryFiles(dirPath) {
+  const files = fs.readdirSync(dirPath);
   
-  // 如果沒有類型文件但有上下文文件
-  if (!fs.existsSync(typesPath) && fs.existsSync(contextPath)) {
-    // 從上下文文件中提取 AuthContextType 定義
-    const content = fs.readFileSync(contextPath, 'utf8');
-    const typeMatch = content.match(/export interface AuthContextType {[\s\S]*?}/);
+  for (const file of files) {
+    const filePath = path.join(dirPath, file);
+    const stats = fs.statSync(filePath);
     
-    if (typeMatch) {
-      console.log('生成 app/types/auth.ts 文件，確保類型一致性');
-      
-      // 創建目錄（如果不存在）
-      if (!fs.existsSync(path.dirname(typesPath))) {
-        fs.mkdirSync(path.dirname(typesPath), { recursive: true });
-      }
-      
-      // 創建類型文件
-      const typeContent = `// 從 AuthContext.tsx 自動生成的類型定義
-import { User } from '@/app/lib/auth';
-
-${typeMatch[0]}
-
-// 自動生成，請勿手動修改
-`;
-      
-      fs.writeFileSync(typesPath, typeContent, 'utf8');
-      return true;
+    if (stats.isDirectory()) {
+      // 遞迴處理子目錄
+      fixDirectoryFiles(filePath);
+    } else if (stats.isFile() && (file.endsWith('.tsx') || file.endsWith('.ts'))) {
+      // 處理TypeScript文件
+      fixUseAuthInFile(filePath);
     }
   }
-  
-  return false;
+}
+
+// 修復文件中使用useAuth的部分
+function fixUseAuthInFile(filePath) {
+  try {
+    let content = fs.readFileSync(filePath, 'utf8');
+    let modified = false;
+    
+    // 檢查文件是否使用了AuthContext
+    if (content.includes('useAuth')) {
+      // 修復loading -> isLoading
+      if (content.includes('loading') && content.includes('useAuth')) {
+        const originalContent = content;
+        
+        // 修復解構中的loading -> isLoading (直接使用)
+        content = content.replace(
+          /const\s*{\s*([^}]*?)loading([^}]*?)\s*}\s*=\s*useAuth\(\)/g,
+          'const {$1isLoading$2} = useAuth()'
+        );
+        
+        // 修復解構中的loading -> isLoading (使用重命名)
+        content = content.replace(
+          /const\s*{\s*([^}]*?)loading\s*:\s*([a-zA-Z0-9]+)([^}]*?)\s*}\s*=\s*useAuth\(\)/g,
+          'const {$1isLoading: $2$3} = useAuth()'
+        );
+        
+        // 檢查文件是否已經被修改
+        if (content !== originalContent) {
+          fs.writeFileSync(filePath, content);
+          console.log(`✅ 已修復文件: ${filePath}`);
+          modified = true;
+        }
+      }
+    }
+    
+    if (!modified && content.includes('useAuth') && content.includes('loading')) {
+      console.log(`ℹ️ 檢查文件但不需要修改: ${filePath}`);
+    }
+  } catch (error) {
+    console.error(`修復文件 ${filePath} 時發生錯誤:`, error);
+  }
 }
 
 // 執行修復
-let fixedCount = 0;
-
-if (fixAuthContextFile()) {
-  fixedCount++;
-}
-
-if (fixLoginPage()) {
-  fixedCount++;
-}
-
-if (ensureAuthContextTypeConsistency()) {
-  fixedCount++;
-}
-
-console.log(`修復完成，共修復了 ${fixedCount} 個文件。`); 
+fixAuthContextTypes(); 

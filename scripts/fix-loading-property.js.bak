@@ -1,0 +1,48 @@
+const fs = require('fs');
+const path = require('path');
+
+// 檔案路徑
+const filePath = path.join(__dirname, '..', 'app', 'bookings', '[bookingId]', 'page.tsx');
+
+// 讀取檔案內容
+console.log(`正在讀取檔案: ${filePath}`);
+if (!fs.existsSync(filePath)) {
+  console.error(`錯誤: 檔案不存在 ${filePath}`);
+  process.exit(1);
+}
+
+let content = fs.readFileSync(filePath, 'utf8');
+const originalContent = content;
+
+// 修改檔案內容
+const newContent = content.replace(/const\s*\{\s*isLoggedIn\s*,\s*user\s*,\s*isLoading\s*\}\s*=\s*useAuth\(\);/g, 
+                                 'const {isLoggedIn, user, loading} = useAuth();')
+                        .replace(/if\s*\(\s*isLoading\s*\)\s*{/g, 
+                                 'if (loading) {')
+                        .replace(/if\s*\(\s*!\s*isLoading\s*&&\s*!\s*isLoggedIn\s*\)\s*{/g, 
+                                 'if (!loading && !isLoggedIn) {')
+                        .replace(/\[\s*bookingId\s*,\s*isLoading\s*,\s*isLoggedIn\s*,\s*user\s*,\s*router\s*\]/g, 
+                                 '[bookingId, loading, isLoggedIn, user, router]');
+
+// 檢查是否有變更
+if (newContent === content) {
+  console.log('警告: 未發現需要修改的內容');
+} else {
+  // 寫回檔案
+  fs.writeFileSync(filePath, newContent, 'utf8');
+  console.log('✅ 已修復 isLoading 問題');
+}
+
+// 最終檢查
+const updatedContent = fs.readFileSync(filePath, 'utf8');
+const stillHasIssue = updatedContent.includes('isLoading') && 
+                     !updatedContent.includes('loading: isLoading');
+
+if (stillHasIssue) {
+  console.error('❌ 修復未完全成功，檔案中仍然存在 isLoading');
+  console.log('手動檢查 app/bookings/[bookingId]/page.tsx 文件並修復所有 isLoading 引用');
+} else {
+  console.log('✅ 檢查通過，問題已解決');
+}
+
+console.log('腳本執行完成'); 

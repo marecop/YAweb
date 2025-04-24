@@ -1,0 +1,3 @@
+# 緩存管理
+.next/cache
+node_modules/.cache

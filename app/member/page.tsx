@@ -6,7 +6,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useAuth } from '../../contexts/AuthContext';
 import { FaUser, FaPlane, FaTicketAlt, FaCreditCard, FaExchangeAlt, FaCog, FaLock } from 'react-icons/fa';
-import { getMemberLevelName, getMemberLevelColorClass } from '../utils/memberUtils';
+import { getMemberLevelName, getMemberLevelColorClass } from '../../utils/memberUtils';
 
 // 定義活動記錄類型
 interface Activity {
@@ -21,7 +21,7 @@ interface Activity {
 
 export default function MemberPage() {
   const router = useRouter();
-  const { user, isLoggedIn, loading } = useAuth();
+  const {user, isLoggedIn, loading} = useAuth();
   const [milesInfo, setMilesInfo] = useState({
     total: 0,
     balance: 0,

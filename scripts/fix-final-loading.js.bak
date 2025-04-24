@@ -1,0 +1,44 @@
+const fs = require('fs');
+const path = require('path');
+
+// 主函數
+async function fixBookingIdPage() {
+  console.log('開始修復 app/bookings/[bookingId]/page.tsx 文件中的 isLoading 屬性問題...');
+  
+  // 檢查 bookingId 頁面
+  const bookingDetailPath = path.join(process.cwd(), 'app/bookings/[bookingId]/page.tsx');
+  
+  if (!fs.existsSync(bookingDetailPath)) {
+    console.error('無法找到 app/bookings/[bookingId]/page.tsx 文件');
+    return;
+  }
+  
+  let bookingDetailContent = fs.readFileSync(bookingDetailPath, 'utf8');
+  
+  // 使用正則表達式替換變量名稱
+  const updatedContent = bookingDetailContent.replace(
+    /const\s*{\s*isLoggedIn\s*,\s*user\s*,\s*isLoading\s*}\s*=\s*useAuth\(\)/g,
+    'const {isLoggedIn, user, loading} = useAuth()'
+  );
+  
+  // 替換其他地方使用的 isLoading
+  const finalContent = updatedContent.replace(
+    /if\s*\(\s*isLoading\s*\)/g,
+    'if (loading)'
+  );
+  
+  // 替換依賴數組中的 isLoading
+  const depsContent = finalContent.replace(
+    /\[\s*bookingId\s*,\s*pageLoading\s*,\s*isLoggedIn\s*,\s*user\s*,\s*router\s*,\s*isLoading\s*\]/g,
+    '[bookingId, pageLoading, isLoggedIn, user, router, loading]'
+  );
+  
+  // 寫回文件
+  fs.writeFileSync(bookingDetailPath, depsContent, 'utf8');
+  console.log('✅ 已修復 app/bookings/[bookingId]/page.tsx 文件');
+  
+  console.log('修復完成！');
+}
+
+// 執行主函數
+fixBookingIdPage().catch(console.error); 

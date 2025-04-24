@@ -7,7 +7,7 @@ import { useAuth } from '@/app/contexts/AuthContext';
 
 export default function RegisterPage() {
   const router = useRouter();
-  const { register, isLoading } = useAuth();
+  const { register, loading } = useAuth();
   
   const [formData, setFormData] = useState({
     firstName: '',
@@ -40,13 +40,13 @@ export default function RegisterPage() {
     }
     
     try {
-      // 調用註冊功能
-      const registrationSuccess = await register({
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.email,
-        password: formData.password
-      });
+      // 調用註冊功能 - 使用四個獨立參數
+      const registrationSuccess = await register(
+        formData.firstName,
+        formData.lastName,
+        formData.email,
+        formData.password
+      );
       
       if (registrationSuccess) {
         // 註冊成功，導航到會員區
@@ -178,10 +178,10 @@ export default function RegisterPage() {
             <div>
               <button
                 type="submit"
-                disabled={isLoading}
+                disabled={loading}
                 className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-ya-yellow-600 hover:bg-ya-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ya-yellow-500"
               >
-                {isLoading ? '處理中...' : '註冊'}
+                { loading ? '處理中...' : '註冊'}
               </button>
             </div>
           </form>

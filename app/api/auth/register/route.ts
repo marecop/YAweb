@@ -1,95 +1,56 @@
 import { NextResponse } from 'next/server';
-import connectToDatabase from '@/app/lib/mongodb';
-import UserModel, { IUser } from '@/app/models/User';
-import SessionModel from '@/app/models/Session';
+import { cookies } from 'next/headers';
+import { users } from '@/data/users';
 
 export async function POST(request: Request) {
   try {
-    // 連接到MongoDB
-    await connectToDatabase();
-    
-    const { email, password, firstName, lastName } = await request.json();
+    const body = await request.json();
+    const { firstName, lastName, email, password } = body;
 
-    // 簡單的驗證
-    if (!email || !password) {
-      return NextResponse.json(
-        { error: '請提供電子郵件和密碼' },
-        { status: 400 }
-      );
-    }
-
-    if (password.length < 6) {
-      return NextResponse.json(
-        { error: '密碼必須至少包含6個字符' },
-        { status: 400 }
-      );
-    }
-
-    // 檢查電子郵件格式
-    const emailRegex = /\S+@\S+\.\S+/;
-    if (!emailRegex.test(email)) {
-      return NextResponse.json(
-        { error: '請提供有效的電子郵件地址' },
-        { status: 400 }
-      );
-    }
-
-    // 檢查電子郵件是否已存在
-    const existingUser = await UserModel.findByEmail(email);
+    // 檢查使用者是否已存在
+    const existingUser = users.find(u => u.email === email);
     if (existingUser) {
       return NextResponse.json(
-        { error: '此電子郵件已被註冊' },
-        { status: 409 }
+        { error: '使用者已存在' },
+        { status: 400 }
       );
     }
 
-    // 創建新用戶
-    const newUser = new UserModel({
+    // 創建新使用者 (實際應用會存入資料庫)
+    const newUserId = `user_${Date.now()}`;
+    const newUser = {
+      id: newUserId,
+      firstName,
+      lastName,
       email,
-      password,
-      firstName: firstName || email.split('@')[0],
-      lastName: lastName || 'User',
-      role: 'user',
-      isMember: true
-    });
+      password, // 實際應用應加密儲存
+      miles: 0,
+      level: 'Blue' as 'Blue' | 'Silver' | 'Gold' | 'Platinum',
+    };
 
-    // 保存用戶 (密碼將通過中間件自動加密)
-    await newUser.save();
+    // 將新使用者加入模擬資料 (實際應用會存入資料庫)
+    users.push(newUser);
 
-    // 獲取用戶ID (確保類型正確)
-    const userId = newUser._id ? newUser._id.toString() : '';
-
-    // 創建會話
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 7); // 7天後過期
-    const session = await SessionModel.createSession(userId, expiresAt);
-    
-    // 移除敏感資訊
-    const userData = newUser.toObject();
-    const { password: _, ...userWithoutPassword } = userData;
-    
-    // 創建響應
-    const response = NextResponse.json({
-      success: true,
-      user: userWithoutPassword,
-      message: '註冊成功'
-    });
-    
-    // 設置 cookie
-    response.cookies.set({
-      name: 'sessionToken',
-      value: session.token,
+    // 設置 cookie 來模擬身份驗證狀態
+    cookies().set('auth-token', newUserId, {
       httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 60 * 60 * 24 * 7, // 一週
       path: '/',
-      expires: expiresAt
     });
+
+    // 返回使用者資訊 (排除密碼)
+    const { password: _, ...userWithoutPassword } = newUser;
     
-    return response;
+    return NextResponse.json({
+      message: '註冊成功',
+      user: userWithoutPassword
+    });
   } catch (error) {
-    console.error('註冊錯誤:', error);
+    console.error('註冊錯誤', error);
     return NextResponse.json(
-      { error: '伺服器錯誤，請稍後再試' },
+      { error: '註冊過程發生錯誤' },
       { status: 500 }
     );
   }
-} 
+}

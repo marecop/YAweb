@@ -12,7 +12,7 @@ export default function MemberLayout({
   children: React.ReactNode
 }) {
   const router = useRouter();
-  const { isLoggedIn, loading, user } = useAuth();
+  const {isLoggedIn, loading, user} = useAuth();
   const [showRegisterPrompt, setShowRegisterPrompt] = useState(false);
 
   useEffect(() => {
